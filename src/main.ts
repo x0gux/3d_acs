@@ -204,13 +204,14 @@ dirInput.addEventListener("change", async () => {
     // 1) PGM → 3D 바닥 텍스처 (YAML resolution/origin 자동 적용)
     viewer.loadMapImage(canvas, meta);
 
-    // 2) 비즈니스 JSON → 노드/엣지 그래프 (좌표: 미터)
+    // 2) 비즈니스 JSON → 노드/엣지 그래프
     if (graph.nodes.length > 0) {
       // 프레임 높이 = 이미지 세로 크기(m) — y원점 "상단" 변환에 사용
       lastFrameHeight =
         floorInfo?.widthM ??
         (meta.heightPx ?? 0) * (meta.resolutionMPerPx ?? 0.05);
-      viewer.loadMapGraph(graph, currentGraphOptions());
+      // Axbis 비즈니스 맵 좌표는 항상 "미터" 단위 (셀렉트 값 무관 강제)
+      viewer.loadMapGraph(graph, { ...currentGraphOptions(), unit: "m" });
       graphNodeCount = viewer.getGraphNodeCount();
       graphEdgeCount = viewer.getGraphEdgeCount();
       graphVisible = true;
