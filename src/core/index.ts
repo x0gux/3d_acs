@@ -1,7 +1,7 @@
 export { AcsViewer } from "./AcsViewer";
 export { MapTransform } from "./MapTransform";
 export { WallBuilder } from "./WallBuilder";
-export { RobotManager, STATUS_COLOR } from "./RobotManager";
+export { RobotManager, STATUS_COLOR, type RobotPathOptions } from "./RobotManager";
 export { MapGraphRenderer, NODE_KIND_COLOR } from "./MapGraphRenderer";
 export {
   parsePGM,

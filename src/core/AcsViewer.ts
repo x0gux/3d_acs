@@ -472,9 +472,13 @@ export class AcsViewer {
   // 로봇
   // ───────────────────────────────────────────────────────
 
-  /** 로봇 좌표 수신 (신규 등록 또는 목표 갱신, 렌더는 Lerp 보간) */
-  updateRobotPose(pose: RobotPose) {
-    this.robotManager.updateRobotPose(pose);
+  /**
+   * 로봇 좌표 수신 (신규 등록 또는 목표 갱신, 렌더는 Lerp 보간)
+   * @param opts.interruptPath true(기본)이면 진행 중인 시뮬레이션 경로를 중단하고 실측 좌표로 전환.
+   *        시뮬레이션 틱으로 로봇을 움직일 때는 false를 넘기세요.
+   */
+  updateRobotPose(pose: RobotPose, opts?: { interruptPath?: boolean }) {
+    this.robotManager.updateRobotPose(pose, opts);
   }
 
   removeRobot(id: string) {
@@ -487,6 +491,102 @@ export class AcsViewer {
 
   getRobotCount(): number {
     return this.robotManager.getRobotCount();
+  }
+
+  // ───────────────────────────────────────────────────────
+  // 로봇 경로 이동 (시뮬레이션) + 그래프 경로 탐색
+  // ───────────────────────────────────────────────────────
+
+  /**
+   * 로봇이 웨이포인트를 따라 등속 이동합니다 (시뮬레이션).
+   * 실측 좌표(updateRobotPose, interruptPath 기본 true)가 들어오면 자동 중단됩니다.
+   * @returns 성공 여부
+   */
+  moveRobotAlongPath(
+    robotId: string,
+    waypoints: WorldPoint[],
+    options?: { speedMps?: number; onComplete?: (robotId: string) => void }
+  ): boolean {
+    return this.robotManager.setRobotPath(robotId, waypoints, options);
+  }
+
+  /** 진행 중인 경로 이동 중단 (로봇은 현재 위치에 정지) */
+  stopRobotPath(robotId: string) {
+    this.robotManager.stopRobotPath(robotId);
+  }
+
+  hasRobotPath(robotId: string): boolean {
+    return this.robotManager.hasRobotPath(robotId);
+  }
+
+  /** 그래프 상 최단 경로 탐색 → 노드 ID 배열 (경로 없으면 null) */
+  findPath(startNodeId: string, endNodeId: string): string[] | null {
+    return this.mapGraph.findPath(startNodeId, endNodeId);
+  }
+
+  /** 노드의 월드 좌표 */
+  getGraphNodePosition(nodeId: string): WorldPoint | null {
+    return this.mapGraph.getGraphNodePosition(nodeId);
+  }
+
+  /** 좌표에서 가장 가까운 노드 ID */
+  findNearestNode(point: WorldPoint): string | null {
+    return this.mapGraph.findNearestNode(point);
+  }
+
+  /** 로봇의 현재 위치에서 가장 가까운 노드 ID */
+  findNearestNodeToRobot(robotId: string): string | null {
+    const pos = this.robotManager.getRobotPosition(robotId);
+    if (!pos) return null;
+    return this.mapGraph.findNearestNode(pos);
+  }
+
+  /** 노드 경로 하이라이트 (연속 노드쌍 엣지 자동 매칭) */
+  highlightGraphPath(nodeIds: string[]) {
+    this.mapGraph.highlightPath(nodeIds);
+  }
+
+  /**
+   * 로봇을 지정 노드까지 그래프 최단 경로로 이동시키는 원스톱 명령 (시뮬레이션).
+   * 로봇 현재 위치 → 가장 가까운 노드 → 최단 경로 → 목적지 순서로 웨이포인트를 구성하고
+   * 진행 경로(노드/엣지)를 하이라이트합니다.
+   * @returns 경과 노드 ID 배열 (로봇 없음/경로 없음이면 null)
+   */
+  dispatchRobotToNode(
+    robotId: string,
+    targetNodeId: string,
+    options?: { speedMps?: number }
+  ): string[] | null {
+    const pos = this.robotManager.getRobotPosition(robotId);
+    if (!pos) return null;
+
+    const startNode = this.mapGraph.findNearestNode(pos);
+    if (!startNode) return null;
+
+    const pathIds = this.mapGraph.findPath(startNode, targetNodeId);
+    if (!pathIds) return null;
+
+    const waypoints: WorldPoint[] = [{ x: pos.x, z: pos.z }];
+    for (const id of pathIds) {
+      const p = this.mapGraph.getGraphNodePosition(id);
+      if (p) waypoints.push(p);
+    }
+
+    if (
+      !this.moveRobotAlongPath(robotId, waypoints, {
+        speedMps: options?.speedMps,
+      })
+    ) {
+      return null;
+    }
+
+    this.mapGraph.highlightPath(pathIds);
+    return pathIds;
+  }
+
+  /** 경로 이동 완료(목적지 도착) 구독 */
+  onRobotArrived(cb: (robotId: string) => void) {
+    this.robotManager.onRobotArrived(cb);
   }
 
   // ───────────────────────────────────────────────────────

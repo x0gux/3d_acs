@@ -4,6 +4,7 @@ import type {
   MapGraphEdge,
   MapGraphNode,
   MapGraphOptions,
+  WorldPoint,
 } from "./types";
 
 /** 노드 종류별 색상 (데모룸 MapLayers 아이콘 규칙과 동일 분류) */
@@ -269,6 +270,121 @@ export class MapGraphRenderer {
         this.group.add(this.arrowMesh);
       }
     }
+  }
+
+  // ───────────────────────────────────────────────────────
+  // 경로 탐색 / 조회
+  // ───────────────────────────────────────────────────────
+
+  /**
+   * 시작 → 목적지 노드의 최단 경로 (Dijkstra).
+   * 가중치 = edgeLengthM ?? 노드 간 유클리드 거리, 엣지는 벤더 규약대로 방향성(start→end) 적용.
+   * @returns 노드 ID 배열 (start 포함) — 경로가 없으면 null
+   */
+  findPath(startNodeId: string, endNodeId: string): string[] | null {
+    if (startNodeId === endNodeId) {
+      return this.nodePositions.has(startNodeId) ? [startNodeId] : null;
+    }
+    if (
+      !this.nodePositions.has(startNodeId) ||
+      !this.nodePositions.has(endNodeId)
+    ) {
+      return null;
+    }
+
+    // 방향 인접 리스트
+    const adj = new Map<string, Array<{ to: string; w: number }>>();
+    for (const rec of this.edgeList) {
+      const a = this.nodePositions.get(rec.edge.startNodeId)!;
+      const b = this.nodePositions.get(rec.edge.endNodeId)!;
+      const w =
+        rec.edge.edgeLengthM ?? Math.hypot(b.x - a.x, b.z - a.z);
+      if (!adj.has(rec.edge.startNodeId)) {
+        adj.set(rec.edge.startNodeId, []);
+      }
+      adj.get(rec.edge.startNodeId)!.push({
+        to: rec.edge.endNodeId,
+        w: Math.max(w, 0),
+      });
+    }
+
+    const dist = new Map<string, number>();
+    const prev = new Map<string, string>();
+    const visited = new Set<string>();
+    dist.set(startNodeId, 0);
+
+    for (;;) {
+      // 미방문 중 최소 거리 노드 (노드 수백 개 수준이라 선형 스캔으로 충분)
+      let cur: string | null = null;
+      let best = Infinity;
+      for (const [id, d] of dist) {
+        if (!visited.has(id) && d < best) {
+          best = d;
+          cur = id;
+        }
+      }
+      if (cur === null || cur === endNodeId) break;
+      visited.add(cur);
+
+      for (const { to, w } of adj.get(cur) ?? []) {
+        if (visited.has(to)) continue;
+        const nd = best + w;
+        if (nd < (dist.get(to) ?? Infinity)) {
+          dist.set(to, nd);
+          prev.set(to, cur);
+        }
+      }
+    }
+
+    if (!dist.has(endNodeId)) return null;
+
+    const path: string[] = [endNodeId];
+    let cur = endNodeId;
+    while (prev.has(cur)) {
+      cur = prev.get(cur)!;
+      path.unshift(cur);
+    }
+    return path[0] === startNodeId ? path : null;
+  }
+
+  /** 노드의 월드 좌표 (없으면 null) */
+  getGraphNodePosition(nodeId: string): WorldPoint | null {
+    return this.nodePositions.get(nodeId) ?? null;
+  }
+
+  /** 좌표에서 가장 가까운 노드 ID */
+  findNearestNode(p: WorldPoint): string | null {
+    let best: string | null = null;
+    let bestD = Infinity;
+    for (const [id, pos] of this.nodePositions) {
+      const d = (pos.x - p.x) ** 2 + (pos.z - p.z) ** 2;
+      if (d < bestD) {
+        bestD = d;
+        best = id;
+      }
+    }
+    return best;
+  }
+
+  /**
+   * 노드 경로 하이라이트 — 노드 + 연속 노드쌍에 대응하는 엣지를 자동 매칭해 함께 표시
+   * (엣지 ID 형식과 무관하게 startNodeId/endNodeId로 매칭)
+   */
+  highlightPath(nodeIds: string[]) {
+    this.highlightNodes(nodeIds);
+    const keys: string[] = [];
+    for (const rec of this.edgeList) {
+      for (let i = 0; i < nodeIds.length - 1; i++) {
+        if (
+          rec.edge.startNodeId === nodeIds[i] &&
+          rec.edge.endNodeId === nodeIds[i + 1]
+        ) {
+          keys.push(rec.key);
+          break;
+        }
+      }
+    }
+    this.highlightEdges(keys);
   }
 
   // ───────────────────────────────────────────────────────

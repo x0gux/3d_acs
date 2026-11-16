@@ -77,6 +77,7 @@ let drawing = false;
 let lastRobotClicked = "";
 let lastNodeClicked = "";
 let lastEdgeInfo = "";
+let arrivedInfo = "";
 let graphNodeCount = 0;
 let graphEdgeCount = 0;
 let floorInfoText = "";
@@ -86,7 +87,7 @@ let autoWallCount = 0;
 
 const hud = document.createElement("div");
 hud.style.cssText =
-  "position:absolute;bottom:16px;left:16px;z-index:30;color:#94a3b8;" +
+  "position:absolute;bottom:16px;right:16px;z-index:30;color:#94a3b8;" +
   "font-size:12px;line-height:1.8;pointer-events:none;";
 container.appendChild(hud);
 
@@ -108,6 +109,7 @@ function updateHud() {
     (lastEdgeInfo
       ? ` · 엣지: <b style="color:#f59e0b">${lastEdgeInfo}</b>`
       : "") +
+    (arrivedInfo ? ` · <b style="color:#22c55e">🅿 도착: ${arrivedInfo}</b>` : "") +
     (graphNodeCount > 0
       ? ` · 그래프: <b style="color:#e2e8f0">노드 ${graphNodeCount} · 엣지 ${graphEdgeCount}</b>`
       : "") +
@@ -117,7 +119,7 @@ function updateHud() {
     `<br>` +
     (drawing
       ? `<span style="color:#22d3ee;font-weight:bold">● 벽 그리기 중 — 바닥 클릭 = 점 추가 (현재 ${wallPointCount}개, 최소 3개)</span>`
-      : `· '벽 그리기 시작' 후 바닥을 클릭해 외곽선을 그리세요 · 로봇/노드/엣지/벽 클릭 시 선택`) +
+      : `· 로봇 클릭 = 명령 대상 · 노드 클릭 = 목적지 · '선택 노드로 이동 명령'으로 경로 이동`) +
     `<br><span style="color:#475569">엣지 범례: <span style="color:#64748b">■</span> 일반 · <span style="color:#f59e0b">■</span> 특수(roadType) · ▶ 일방통행 방향</span>`;
 }
 updateHud();
@@ -125,29 +127,58 @@ updateHud();
 // ─────────────────────────────────────────────────────────
 // UI 컨트롤
 // ─────────────────────────────────────────────────────────
+// ── 컨트롤 패널 (헤더 클릭으로 접기/펼치기) ──
 const ui = document.createElement("div");
 ui.style.cssText =
   "position:absolute;top:16px;left:16px;z-index:30;display:flex;flex-direction:column;" +
-  "gap:8px;background:rgba(15,17,26,0.85);padding:12px;border-radius:8px;" +
-  "border:1px solid #334155;color:#fff;font-size:14px;max-height:calc(100vh - 32px);" +
-  "overflow-y:auto;";
+  "background:rgba(15,17,26,0.85);padding:10px 12px;border-radius:8px;" +
+  "border:1px solid #334155;color:#fff;font-size:14px;max-width:300px;" +
+  "max-height:calc(100vh - 32px);";
 container.appendChild(ui);
+
+// 헤더: 클릭 시 본문 토글
+const panelHeader = document.createElement("div");
+panelHeader.style.cssText =
+  "display:flex;align-items:center;justify-content:space-between;gap:12px;" +
+  "cursor:pointer;user-select:none;";
+panelHeader.addEventListener("mouseenter", () => {
+  panelHeader.style.background = "rgba(51,65,85,0.5)";
+});
+panelHeader.addEventListener("mouseleave", () => {
+  panelHeader.style.background = "transparent";
+});
+ui.appendChild(panelHeader);
 
 const title = document.createElement("div");
 title.textContent = "ACS 3D 뷰어 데모";
-title.style.fontWeight = "bold";
-title.style.marginBottom = "4px";
-title.style.color = "#f8fafc";
-ui.appendChild(title);
+title.style.cssText = "font-weight:bold;color:#f8fafc;";
+panelHeader.appendChild(title);
+
+const panelToggle = document.createElement("div");
+panelToggle.textContent = "▾"; // 펼쳐진 상태
+panelToggle.style.cssText = "color:#94a3b8;font-size:12px;";
+panelHeader.appendChild(panelToggle);
+
+// 본문: 접으면 display:none
+const panelBody = document.createElement("div");
+panelBody.style.cssText =
+  "display:flex;flex-direction:column;gap:8px;margin-top:8px;overflow-y:auto;";
+ui.appendChild(panelBody);
+
+let panelOpen = true;
+panelHeader.addEventListener("click", () => {
+  panelOpen = !panelOpen;
+  panelBody.style.display = panelOpen ? "flex" : "none";
+  panelToggle.textContent = panelOpen ? "▾" : "▸";
+});
 
 function btn(label: string, onClick: () => void, disabled = false) {
   const b = document.createElement("button");
   b.textContent = label;
   b.onclick = onClick;
   b.disabled = disabled;
-  b.style.cssText = `padding:8px 14px;border-radius:6px;border:none;background:${
-    disabled ? "#475569" : "#cf211d"
-  };color:#fff;cursor:${disabled ? "not-allowed" : "pointer"};font-size:14px;`;
+  b.style.cssText = `padding:8px 14px;border-radius:6px;border:none;background:${disabled ? "#475569" : "#cf211d"
+    };color:#fff;cursor:${disabled ? "not-allowed" : "pointer"};font-size:14px;`;
   return b;
 }
 
@@ -177,8 +208,8 @@ function numberInput(label: string, value: number, min: number, max: number, ste
 }
 
 // ── 지도 섹션 ──
-ui.appendChild(sectionLabel("지도"));
-ui.appendChild(btn("지도 이미지 업로드", () => fileInput.click()));
+panelBody.appendChild(sectionLabel("지도"));
+panelBody.appendChild(btn("지도 이미지 업로드", () => fileInput.click()));
 
 // Axbis 맵 내보내기 폴더 통합 로드 (PGM + YAML + 비즈니스 JSON)
 const dirInput = document.createElement("input");
@@ -187,7 +218,7 @@ dirInput.setAttribute("webkitdirectory", ""); // 폴더 선택
 dirInput.style.display = "none";
 container.appendChild(dirInput);
 
-ui.appendChild(
+panelBody.appendChild(
   btn("Axbis 맵 폴더 로드 (PGM+YAML+JSON)", async () => {
     // 클릭 시점에 파일 선택창이 뜨도록 별도 핸들러 없이 click 트리거
     dirInput.click();
@@ -226,7 +257,7 @@ dirInput.addEventListener("change", async () => {
     // 3) HUD 층 정보
     floorInfoText = floorInfo
       ? `${floorInfo.name} · ${floorInfo.lengthM}×${floorInfo.widthM}m · v${floorInfo.version}` +
-        ` · ${meta.resolutionMPerPx ?? "?"}m/px`
+      ` · ${meta.resolutionMPerPx ?? "?"}m/px`
       : `PGM ${meta.widthPx}×${meta.heightPx}px · ${meta.resolutionMPerPx ?? "?"}m/px`;
 
     // 4) 맵 중심으로 정상단 뷰 이동 — 노드/엣지 확인에 유용
@@ -245,11 +276,11 @@ dirInput.addEventListener("change", async () => {
 });
 
 // ── 벽 섹션 ──
-ui.appendChild(sectionLabel("벽"));
+panelBody.appendChild(sectionLabel("벽"));
 const { wrap: hWrap, input: heightInput } = numberInput("높이(m)", 3, 0.5, 10, 0.5);
 const { wrap: tWrap, input: thicknessInput } = numberInput("두께(m)", 0.2, 0.05, 2, 0.05);
-ui.appendChild(hWrap);
-ui.appendChild(tWrap);
+panelBody.appendChild(hWrap);
+panelBody.appendChild(tWrap);
 
 const btnStart = btn("벽 그리기 시작", () => {
   viewer.startWallDrawing();
@@ -320,18 +351,18 @@ const btnFade = btn(`앞벽 자동 페이드: ${viewer.isWallFadeEnabled() ? "ON
   btnFade.textContent = `앞벽 자동 페이드: ${next ? "ON" : "OFF"}`;
 });
 
-ui.appendChild(btnStart);
-ui.appendChild(btnClose);
-ui.appendChild(btnClearPoints);
-ui.appendChild(btnStop);
-ui.appendChild(btnDeleteWall);
-ui.appendChild(btnClearWalls);
-ui.appendChild(btnAutoDelete);
-ui.appendChild(btnAutoRebuild);
-ui.appendChild(btnFade);
+panelBody.appendChild(btnStart);
+panelBody.appendChild(btnClose);
+panelBody.appendChild(btnClearPoints);
+panelBody.appendChild(btnStop);
+panelBody.appendChild(btnDeleteWall);
+panelBody.appendChild(btnClearWalls);
+panelBody.appendChild(btnAutoDelete);
+panelBody.appendChild(btnAutoRebuild);
+panelBody.appendChild(btnFade);
 
 // ── 로봇 섹션 ──
-ui.appendChild(sectionLabel("로봇"));
+panelBody.appendChild(sectionLabel("로봇"));
 const btnRobotDemo = btn("가상 로봇 데모 시작", () => {
   startRobotDemo();
   btnRobotDemo.textContent = "가상 로봇 데모 실행 중...";
@@ -346,11 +377,40 @@ const btnRobotStop = btn("가상 로봇 정지", () => {
   updateHud();
 });
 
-ui.appendChild(btnRobotDemo);
-ui.appendChild(btnRobotStop);
+panelBody.appendChild(btnRobotDemo);
+panelBody.appendChild(btnRobotStop);
+
+// 클릭으로 명령: 마지막으로 클릭한 로봇이 마지막으로 클릭한 노드까지 그래프 경로로 이동
+panelBody.appendChild(
+  btn("선택 노드로 이동 명령", () => {
+    if (!lastRobotClicked) {
+      alert("먼저 로봇을 클릭해 명령 대상을 선택하세요.");
+      return;
+    }
+    if (!lastNodeClicked) {
+      alert("먼저 목적지 노드를 클릭하세요.");
+      return;
+    }
+    if (graphNodeCount === 0) {
+      alert("먼저 맵 그래프를 로드하세요 (샘플 그래프 또는 Axbis 맵).");
+      return;
+    }
+    const path = viewer.dispatchRobotToNode(lastRobotClicked, lastNodeClicked, {
+      speedMps: 1.2,
+    });
+    if (!path) {
+      alert("경로를 찾을 수 없습니다.");
+      return;
+    }
+    const v = vrobots.find((r) => r.id === lastRobotClicked);
+    if (v) v.dispatched = true; // 도착할 때까지 틱 중지
+    arrivedInfo = "";
+    updateHud();
+  })
+);
 
 // ── 맵 그래프 (노드/엣지) 섹션 ──
-ui.appendChild(sectionLabel("맵 그래프 (노드/엣지)"));
+panelBody.appendChild(sectionLabel("맵 그래프 (노드/엣지)"));
 
 // 좌표 단위 선택 + y 원점 옵션 (노드가 맵 기준 상하 반전으로 보이면 "상단" 선택)
 const graphOptsRow = document.createElement("div");
@@ -362,11 +422,11 @@ unitSelect.innerHTML = `<option value="mm">좌표 단위: mm</option><option val
 const yOriginSelect = document.createElement("select");
 yOriginSelect.style.cssText = unitSelect.style.cssText;
 yOriginSelect.innerHTML =
-  `<option value="bottom">y 원점: 하단(ROS, 기본)</option>` +
-  `<option value="top">y 원점: 상단(이미지)</option>`;
+  `<option value="top">y 원점: 상단(이미지)</option>` +
+  `<option value="bottom">y 원점: 하단(ROS)</option>`;
 graphOptsRow.appendChild(unitSelect);
 graphOptsRow.appendChild(yOriginSelect);
-ui.appendChild(graphOptsRow);
+panelBody.appendChild(graphOptsRow);
 
 /** 마지막으로 로드한 맵의 프레임 높이(m) — y원점 "상단" 변환에 사용 */
 let lastFrameHeight: number | undefined;
@@ -429,7 +489,7 @@ const graphToggleBtn = btn("그래프 숨기기", () => {
   graphToggleBtn.textContent = graphVisible ? "그래프 숨기기" : "그래프 보이기";
 });
 
-ui.appendChild(
+panelBody.appendChild(
   btn("샘플 그래프 로드", () => {
     const graph = makeSampleGraph();
     viewer.loadMapGraph(graph, currentGraphOptions());
@@ -447,7 +507,7 @@ graphInput.accept = ".json";
 graphInput.style.display = "none";
 container.appendChild(graphInput);
 
-ui.appendChild(
+panelBody.appendChild(
   btn("그래프 JSON 로드", () => graphInput.click())
 );
 
@@ -468,19 +528,19 @@ graphInput.addEventListener("change", async () => {
   graphInput.value = "";
 });
 
-ui.appendChild(
+panelBody.appendChild(
   btn("경로 하이라이트 데모", () => {
     viewer.highlightGraphNodes(["N-00", "N-01", "N-02", "N-03"]);
     viewer.highlightGraphEdges(["N-00-N-01", "N-01-N-02", "N-02-N-03"]);
   })
 );
 
-ui.appendChild(btn("하이라이트 해제", () => viewer.clearGraphHighlights()));
-ui.appendChild(graphToggleBtn);
+panelBody.appendChild(btn("하이라이트 해제", () => viewer.clearGraphHighlights()));
+panelBody.appendChild(graphToggleBtn);
 
 // ── 카메라 섹션 ──
-ui.appendChild(sectionLabel("카메라"));
-ui.appendChild(btn("위에서 보기 (Top View)", () => viewer.setTopView()));
+panelBody.appendChild(sectionLabel("카메라"));
+panelBody.appendChild(btn("위에서 보기 (Top View)", () => viewer.setTopView()));
 
 // ─────────────────────────────────────────────────────────
 // 가상 로봇 데모 (100ms 간격 좌표 송신 → RobotManager가 Lerp 보간)
@@ -492,6 +552,7 @@ interface VRobot {
   idx: number;
   t: number;
   speed: number;
+  dispatched?: boolean; // 경로 이동 명령 중 → 틱 중지 (시뮬레이션 간섭 방지)
 }
 
 const vrobots: VRobot[] = [
@@ -536,6 +597,7 @@ let demoTimer: number | null = null;
 
 function tickVRobots() {
   for (const r of vrobots) {
+    if (r.dispatched) continue; // 경로 이동 중인 로봇은 틱 중지
     const a = r.waypoints[r.idx];
     const b = r.waypoints[(r.idx + 1) % r.waypoints.length];
     r.t += r.speed * 0.1; // 100ms 틱
@@ -605,6 +667,15 @@ viewer.onEdgeClick((edge) => {
   } else {
     lastEdgeInfo = "";
   }
+  updateHud();
+});
+
+viewer.onRobotArrived((robotId) => {
+  // 경로 이동 완료 → 가상 로봇 틱 재개
+  const v = vrobots.find((r) => r.id === robotId);
+  if (v) v.dispatched = false;
+  arrivedInfo = robotId;
+  console.log(`[AcsViewer] 목적지 도착: ${robotId}`);
   updateHud();
 });
 
