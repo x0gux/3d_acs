@@ -11,6 +11,31 @@ export interface AcsViewerOptions {
     backgroundColor?: number;
     fogNear?: number;
     fogFar?: number;
+    /** 카메라에 가려지는 앞쪽 벽 자동 반투명(페이드) 설정 */
+    wallFade?: Partial<WallFadeOptions>;
+}
+/**
+ * 뷰 의존적 벽 페이드 설정
+ *
+ * 카메라가 어떤 벽 세그먼트의 "바깥쪽"(루프 내부 반대편)에 있고,
+ * 시선 각도가 낮을수록(수평에 가까울수록) 그 벽을 반투명하게 만들어
+ * 내부 로봇/경로가 보이도록 한다. 위에서 내려다보면(탑뷰) 불투명 유지.
+ *
+ * 판정값 s = normalize(카메라위치 - 벽중점) · 벽바깥법선 (코사인, -1~1)
+ * - s=0 : 카메라가 벽 바로 위(수직) → 불투명
+ * - s=1 : 카메라가 벽 정면 수평 방향 → 가장 투명
+ * - s<0 : 카메라가 벽 안쪽(반대편) → 불투명
+ */
+export interface WallFadeOptions {
+    enabled: boolean;
+    /** 최대로 투명해질 때의 opacity (0~1, 기본 0.15) */
+    minOpacity: number;
+    /** 페이드 시작 임계값 (cos 값, 기본 0.45 — 카메라 고도 약 27° 이하부터 서서히) */
+    fadeStart: number;
+    /** 완전 페이드 임계값 (cos 값, 기본 0.85 — 고도 약 58°에서 최대 투명도) */
+    fadeEnd: number;
+    /** 초당 투명도 보간 속도 (기본 8, 클수록 빠르게 전환) */
+    fadeSpeed: number;
 }
 /** 맵 캘리브레이션: 이미지 해상도(px)와 실제 크기(m)의 비율 계산용 */
 export interface MapCalibration {

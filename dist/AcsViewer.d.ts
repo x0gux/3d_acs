@@ -1,4 +1,4 @@
-import { AcsViewerOptions, MapCalibration, MapMeta, WallOptions, RobotPose, WorldPoint, MapGraphData, MapGraphOptions } from './types';
+import { AcsViewerOptions, MapCalibration, MapMeta, WallOptions, WallFadeOptions, RobotPose, WorldPoint, MapGraphData, MapGraphOptions } from './types';
 import * as THREE from "three";
 /**
  * ACS 관제 3D 뷰어 코어 (순수 TypeScript + Three.js)
@@ -70,6 +70,11 @@ export declare class AcsViewer {
     removeSelectedWall(): void;
     /** 생성된 모든 3D 월 삭제 */
     clearWalls(): void;
+    /** 앞벽 자동 반투명 페이드 켜기/끄기 (끄면 모든 벽이 불투명으로 복원) */
+    setWallFadeEnabled(enabled: boolean): void;
+    isWallFadeEnabled(): boolean;
+    /** 페이드 세부 옵션 조정 (minOpacity / fadeStart / fadeEnd / fadeSpeed) */
+    setWallFadeOptions(opts: Partial<WallFadeOptions>): void;
     getWallCount(): number;
     /** 로봇 좌표 수신 (신규 등록 또는 목표 갱신, 렌더는 Lerp 보간) */
     updateRobotPose(pose: RobotPose): void;
@@ -91,7 +96,7 @@ export declare class AcsViewer {
     getGraphEdgeCount(): number;
     /** 정상단(top-down) 뷰 — 외곽선 그리기/맵 확인에 유용 (중심·높이 지정 가능) */
     setTopView(centerX?: number, centerZ?: number, height?: number): void;
-    onWallCreated(cb: (wallId: string, mesh: THREE.Mesh) => void): void;
+    onWallCreated(cb: (wallId: string, mesh: THREE.Object3D) => void): void;
     onWallPointAdded(cb: (point: WorldPoint) => void): void;
     /** 벽 클릭 선택/해제 (null = 해제) */
     onWallSelected(cb: (wallId: string | null) => void): void;

@@ -1,6 +1,6 @@
-import * as c from "three";
-import { Controls as K, Vector3 as x, MOUSE as T, TOUCH as C, Quaternion as v, Spherical as L, Vector2 as E, Ray as X, Plane as Z, MathUtils as V, BufferGeometry as q, BufferAttribute as $ } from "three";
-const G = { type: "change" }, R = { type: "start" }, F = { type: "end" }, S = new X(), j = new Z(), Q = Math.cos(70 * V.DEG2RAD), b = new x(), w = 2 * Math.PI, g = {
+import * as r from "three";
+import { Controls as B, Vector3 as x, MOUSE as S, TOUCH as D, Quaternion as L, Spherical as v, Vector2 as E, Ray as K, Plane as X, MathUtils as Z } from "three";
+const j = { type: "change" }, R = { type: "start" }, H = { type: "end" }, T = new K(), z = new X(), V = Math.cos(70 * Z.DEG2RAD), w = new x(), P = 2 * Math.PI, m = {
   NONE: -1,
   ROTATE: 0,
   DOLLY: 1,
@@ -10,7 +10,7 @@ const G = { type: "change" }, R = { type: "start" }, F = { type: "end" }, S = ne
   TOUCH_DOLLY_PAN: 5,
   TOUCH_DOLLY_ROTATE: 6
 }, A = 1e-6;
-class J extends K {
+class q extends B {
   /**
    * Constructs a new controls instance.
    *
@@ -18,7 +18,7 @@ class J extends K {
    * @param {?HTMLElement} domElement - The HTML element used for event listeners.
    */
   constructor(t, e = null) {
-    super(t, e), this.state = g.NONE, this.target = new x(), this.cursor = new x(), this.minDistance = 0, this.maxDistance = 1 / 0, this.minZoom = 0, this.maxZoom = 1 / 0, this.minTargetRadius = 0, this.maxTargetRadius = 1 / 0, this.minPolarAngle = 0, this.maxPolarAngle = Math.PI, this.minAzimuthAngle = -1 / 0, this.maxAzimuthAngle = 1 / 0, this.enableDamping = !1, this.dampingFactor = 0.05, this.enableZoom = !0, this.zoomSpeed = 1, this.enableRotate = !0, this.rotateSpeed = 1, this.keyRotateSpeed = 1, this.enablePan = !0, this.panSpeed = 1, this.screenSpacePanning = !0, this.keyPanSpeed = 7, this.zoomToCursor = !1, this.autoRotate = !1, this.autoRotateSpeed = 2, this.keys = { LEFT: "ArrowLeft", UP: "ArrowUp", RIGHT: "ArrowRight", BOTTOM: "ArrowDown" }, this.mouseButtons = { LEFT: T.ROTATE, MIDDLE: T.DOLLY, RIGHT: T.PAN }, this.touches = { ONE: C.ROTATE, TWO: C.DOLLY_PAN }, this.target0 = this.target.clone(), this.position0 = this.object.position.clone(), this.zoom0 = this.object.zoom, this._cursorStyle = "auto", this._domElementKeyEvents = null, this._lastPosition = new x(), this._lastQuaternion = new v(), this._lastTargetPosition = new x(), this._quat = new v().setFromUnitVectors(t.up, new x(0, 1, 0)), this._quatInverse = this._quat.clone().invert(), this._spherical = new L(), this._sphericalDelta = new L(), this._scale = 1, this._panOffset = new x(), this._rotateStart = new E(), this._rotateEnd = new E(), this._rotateDelta = new E(), this._panStart = new E(), this._panEnd = new E(), this._panDelta = new E(), this._dollyStart = new E(), this._dollyEnd = new E(), this._dollyDelta = new E(), this._dollyDirection = new x(), this._mouse = new E(), this._performCursorZoom = !1, this._pointers = [], this._pointerPositions = {}, this._controlActive = !1, this._onPointerMove = et.bind(this), this._onPointerDown = tt.bind(this), this._onPointerUp = it.bind(this), this._onContextMenu = lt.bind(this), this._onMouseWheel = nt.bind(this), this._onKeyDown = rt.bind(this), this._onTouchStart = at.bind(this), this._onTouchMove = ht.bind(this), this._onMouseDown = st.bind(this), this._onMouseMove = ot.bind(this), this._interceptControlDown = ct.bind(this), this._interceptControlUp = dt.bind(this), this.domElement !== null && this.connect(this.domElement), this.update();
+    super(t, e), this.state = m.NONE, this.target = new x(), this.cursor = new x(), this.minDistance = 0, this.maxDistance = 1 / 0, this.minZoom = 0, this.maxZoom = 1 / 0, this.minTargetRadius = 0, this.maxTargetRadius = 1 / 0, this.minPolarAngle = 0, this.maxPolarAngle = Math.PI, this.minAzimuthAngle = -1 / 0, this.maxAzimuthAngle = 1 / 0, this.enableDamping = !1, this.dampingFactor = 0.05, this.enableZoom = !0, this.zoomSpeed = 1, this.enableRotate = !0, this.rotateSpeed = 1, this.keyRotateSpeed = 1, this.enablePan = !0, this.panSpeed = 1, this.screenSpacePanning = !0, this.keyPanSpeed = 7, this.zoomToCursor = !1, this.autoRotate = !1, this.autoRotateSpeed = 2, this.keys = { LEFT: "ArrowLeft", UP: "ArrowUp", RIGHT: "ArrowRight", BOTTOM: "ArrowDown" }, this.mouseButtons = { LEFT: S.ROTATE, MIDDLE: S.DOLLY, RIGHT: S.PAN }, this.touches = { ONE: D.ROTATE, TWO: D.DOLLY_PAN }, this.target0 = this.target.clone(), this.position0 = this.object.position.clone(), this.zoom0 = this.object.zoom, this._cursorStyle = "auto", this._domElementKeyEvents = null, this._lastPosition = new x(), this._lastQuaternion = new L(), this._lastTargetPosition = new x(), this._quat = new L().setFromUnitVectors(t.up, new x(0, 1, 0)), this._quatInverse = this._quat.clone().invert(), this._spherical = new v(), this._sphericalDelta = new v(), this._scale = 1, this._panOffset = new x(), this._rotateStart = new E(), this._rotateEnd = new E(), this._rotateDelta = new E(), this._panStart = new E(), this._panEnd = new E(), this._panDelta = new E(), this._dollyStart = new E(), this._dollyEnd = new E(), this._dollyDelta = new E(), this._dollyDirection = new x(), this._mouse = new E(), this._performCursorZoom = !1, this._pointers = [], this._pointerPositions = {}, this._controlActive = !1, this._onPointerMove = Q.bind(this), this._onPointerDown = $.bind(this), this._onPointerUp = J.bind(this), this._onContextMenu = at.bind(this), this._onMouseWheel = st.bind(this), this._onKeyDown = it.bind(this), this._onTouchStart = ot.bind(this), this._onTouchMove = nt.bind(this), this._onMouseDown = tt.bind(this), this._onMouseMove = et.bind(this), this._interceptControlDown = rt.bind(this), this._interceptControlUp = ht.bind(this), this.domElement !== null && this.connect(this.domElement), this.update();
   }
   /**
    * Defines the visual representation of the cursor.
@@ -36,7 +36,7 @@ class J extends K {
     super.connect(t), this.domElement.addEventListener("pointerdown", this._onPointerDown), this.domElement.addEventListener("pointercancel", this._onPointerUp), this.domElement.addEventListener("contextmenu", this._onContextMenu), this.domElement.addEventListener("wheel", this._onMouseWheel, { passive: !1 }), this.domElement.ownerDocument.addEventListener("keydown", this._interceptControlDown, { passive: !0, capture: !0 }), this.domElement.style.touchAction = "none";
   }
   disconnect() {
-    this.state = g.NONE, this.domElement.removeEventListener("pointerdown", this._onPointerDown), this.domElement.ownerDocument.removeEventListener("pointermove", this._onPointerMove), this.domElement.ownerDocument.removeEventListener("pointerup", this._onPointerUp), this.domElement.removeEventListener("pointercancel", this._onPointerUp), this.domElement.removeEventListener("wheel", this._onMouseWheel), this.domElement.removeEventListener("contextmenu", this._onContextMenu), this.stopListenToKeyEvents(), this.domElement.ownerDocument.removeEventListener("keydown", this._interceptControlDown, { capture: !0 }), this.domElement.ownerDocument.removeEventListener("keyup", this._interceptControlUp, { capture: !0 }), this._controlActive = !1, this._pointers.length = 0, this._pointerPositions = {}, this.domElement.style.touchAction = "", this.domElement.style.cursor = "auto";
+    this.state = m.NONE, this.domElement.removeEventListener("pointerdown", this._onPointerDown), this.domElement.ownerDocument.removeEventListener("pointermove", this._onPointerMove), this.domElement.ownerDocument.removeEventListener("pointerup", this._onPointerUp), this.domElement.removeEventListener("pointercancel", this._onPointerUp), this.domElement.removeEventListener("wheel", this._onMouseWheel), this.domElement.removeEventListener("contextmenu", this._onContextMenu), this.stopListenToKeyEvents(), this.domElement.ownerDocument.removeEventListener("keydown", this._interceptControlDown, { capture: !0 }), this.domElement.ownerDocument.removeEventListener("keyup", this._interceptControlUp, { capture: !0 }), this._controlActive = !1, this._pointers.length = 0, this._pointerPositions = {}, this.domElement.style.touchAction = "", this.domElement.style.cursor = "auto";
   }
   dispose() {
     this.disconnect();
@@ -91,7 +91,7 @@ class J extends K {
    * was called, or the initial state.
    */
   reset() {
-    this.target.copy(this.target0), this.object.position.copy(this.position0), this.object.zoom = this.zoom0, this.object.updateProjectionMatrix(), this.dispatchEvent(G), this.update(), this.state = g.NONE;
+    this.target.copy(this.target0), this.object.position.copy(this.position0), this.object.zoom = this.zoom0, this.object.updateProjectionMatrix(), this.dispatchEvent(j), this.update(), this.state = m.NONE;
   }
   /**
    * Programmatically pan the camera.
@@ -136,41 +136,41 @@ class J extends K {
   }
   update(t = null) {
     const e = this.object.position;
-    b.copy(e).sub(this.target), b.applyQuaternion(this._quat), this._spherical.setFromVector3(b), this.autoRotate && this.state === g.NONE && this._rotateLeft(this._getAutoRotationAngle(t)), this.enableDamping ? (this._spherical.theta += this._sphericalDelta.theta * this.dampingFactor, this._spherical.phi += this._sphericalDelta.phi * this.dampingFactor) : (this._spherical.theta += this._sphericalDelta.theta, this._spherical.phi += this._sphericalDelta.phi);
-    let s = this.minAzimuthAngle, i = this.maxAzimuthAngle;
-    isFinite(s) && isFinite(i) && (s < -Math.PI ? s += w : s > Math.PI && (s -= w), i < -Math.PI ? i += w : i > Math.PI && (i -= w), s <= i ? this._spherical.theta = Math.max(s, Math.min(i, this._spherical.theta)) : this._spherical.theta = this._spherical.theta > (s + i) / 2 ? Math.max(s, this._spherical.theta) : Math.min(i, this._spherical.theta)), this._spherical.phi = Math.max(this.minPolarAngle, Math.min(this.maxPolarAngle, this._spherical.phi)), this._spherical.makeSafe(), this.enableDamping === !0 ? this.target.addScaledVector(this._panOffset, this.dampingFactor) : this.target.add(this._panOffset), this.target.sub(this.cursor), this.target.clampLength(this.minTargetRadius, this.maxTargetRadius), this.target.add(this.cursor);
-    let a = !1;
+    w.copy(e).sub(this.target), w.applyQuaternion(this._quat), this._spherical.setFromVector3(w), this.autoRotate && this.state === m.NONE && this._rotateLeft(this._getAutoRotationAngle(t)), this.enableDamping ? (this._spherical.theta += this._sphericalDelta.theta * this.dampingFactor, this._spherical.phi += this._sphericalDelta.phi * this.dampingFactor) : (this._spherical.theta += this._sphericalDelta.theta, this._spherical.phi += this._sphericalDelta.phi);
+    let i = this.minAzimuthAngle, s = this.maxAzimuthAngle;
+    isFinite(i) && isFinite(s) && (i < -Math.PI ? i += P : i > Math.PI && (i -= P), s < -Math.PI ? s += P : s > Math.PI && (s -= P), i <= s ? this._spherical.theta = Math.max(i, Math.min(s, this._spherical.theta)) : this._spherical.theta = this._spherical.theta > (i + s) / 2 ? Math.max(i, this._spherical.theta) : Math.min(s, this._spherical.theta)), this._spherical.phi = Math.max(this.minPolarAngle, Math.min(this.maxPolarAngle, this._spherical.phi)), this._spherical.makeSafe(), this.enableDamping === !0 ? this.target.addScaledVector(this._panOffset, this.dampingFactor) : this.target.add(this._panOffset), this.target.sub(this.cursor), this.target.clampLength(this.minTargetRadius, this.maxTargetRadius), this.target.add(this.cursor);
+    let n = !1;
     if (this.zoomToCursor && this._performCursorZoom || this.object.isOrthographicCamera)
       this._spherical.radius = this._clampDistance(this._spherical.radius);
     else {
       const l = this._spherical.radius;
-      this._spherical.radius = this._clampDistance(this._spherical.radius * this._scale), a = l != this._spherical.radius;
+      this._spherical.radius = this._clampDistance(this._spherical.radius * this._scale), n = l != this._spherical.radius;
     }
-    if (b.setFromSpherical(this._spherical), b.applyQuaternion(this._quatInverse), e.copy(this.target).add(b), this.object.lookAt(this.target), this.enableDamping === !0 ? (this._sphericalDelta.theta *= 1 - this.dampingFactor, this._sphericalDelta.phi *= 1 - this.dampingFactor, this._panOffset.multiplyScalar(1 - this.dampingFactor)) : (this._sphericalDelta.set(0, 0, 0), this._panOffset.set(0, 0, 0)), this.zoomToCursor && this._performCursorZoom) {
+    if (w.setFromSpherical(this._spherical), w.applyQuaternion(this._quatInverse), e.copy(this.target).add(w), this.object.lookAt(this.target), this.enableDamping === !0 ? (this._sphericalDelta.theta *= 1 - this.dampingFactor, this._sphericalDelta.phi *= 1 - this.dampingFactor, this._panOffset.multiplyScalar(1 - this.dampingFactor)) : (this._sphericalDelta.set(0, 0, 0), this._panOffset.set(0, 0, 0)), this.zoomToCursor && this._performCursorZoom) {
       let l = null;
       if (this.object.isPerspectiveCamera) {
-        const h = b.length();
+        const h = w.length();
         l = this._clampDistance(h * this._scale);
         const d = h - l;
-        this.object.position.addScaledVector(this._dollyDirection, d), this.object.updateMatrixWorld(), a = !!d;
+        this.object.position.addScaledVector(this._dollyDirection, d), this.object.updateMatrixWorld(), n = !!d;
       } else if (this.object.isOrthographicCamera) {
         const h = new x(this._mouse.x, this._mouse.y, 0);
         h.unproject(this.object);
         const d = this.object.zoom;
-        this.object.zoom = Math.max(this.minZoom, Math.min(this.maxZoom, this.object.zoom / this._scale)), this.object.updateProjectionMatrix(), a = d !== this.object.zoom;
-        const r = new x(this._mouse.x, this._mouse.y, 0);
-        r.unproject(this.object), this.object.position.sub(r).add(h), this.object.updateMatrixWorld(), l = b.length();
+        this.object.zoom = Math.max(this.minZoom, Math.min(this.maxZoom, this.object.zoom / this._scale)), this.object.updateProjectionMatrix(), n = d !== this.object.zoom;
+        const a = new x(this._mouse.x, this._mouse.y, 0);
+        a.unproject(this.object), this.object.position.sub(a).add(h), this.object.updateMatrixWorld(), l = w.length();
       } else
         console.warn("WARNING: OrbitControls.js encountered an unknown camera type - zoom to cursor disabled."), this.zoomToCursor = !1;
-      l !== null && (this.screenSpacePanning ? this.target.set(0, 0, -1).transformDirection(this.object.matrix).multiplyScalar(l).add(this.object.position) : (S.origin.copy(this.object.position), S.direction.set(0, 0, -1).transformDirection(this.object.matrix), Math.abs(this.object.up.dot(S.direction)) < Q ? this.object.lookAt(this.target) : (j.setFromNormalAndCoplanarPoint(this.object.up, this.target), S.intersectPlane(j, this.target))));
+      l !== null && (this.screenSpacePanning ? this.target.set(0, 0, -1).transformDirection(this.object.matrix).multiplyScalar(l).add(this.object.position) : (T.origin.copy(this.object.position), T.direction.set(0, 0, -1).transformDirection(this.object.matrix), Math.abs(this.object.up.dot(T.direction)) < V ? this.object.lookAt(this.target) : (z.setFromNormalAndCoplanarPoint(this.object.up, this.target), T.intersectPlane(z, this.target))));
     } else if (this.object.isOrthographicCamera) {
       const l = this.object.zoom;
-      this.object.zoom = Math.max(this.minZoom, Math.min(this.maxZoom, this.object.zoom / this._scale)), l !== this.object.zoom && (this.object.updateProjectionMatrix(), a = !0);
+      this.object.zoom = Math.max(this.minZoom, Math.min(this.maxZoom, this.object.zoom / this._scale)), l !== this.object.zoom && (this.object.updateProjectionMatrix(), n = !0);
     }
-    return this._scale = 1, this._performCursorZoom = !1, a || this._lastPosition.distanceToSquared(this.object.position) > A || 8 * (1 - this._lastQuaternion.dot(this.object.quaternion)) > A || this._lastTargetPosition.distanceToSquared(this.target) > A ? (this.dispatchEvent(G), this._lastPosition.copy(this.object.position), this._lastQuaternion.copy(this.object.quaternion), this._lastTargetPosition.copy(this.target), !0) : !1;
+    return this._scale = 1, this._performCursorZoom = !1, n || this._lastPosition.distanceToSquared(this.object.position) > A || 8 * (1 - this._lastQuaternion.dot(this.object.quaternion)) > A || this._lastTargetPosition.distanceToSquared(this.target) > A ? (this.dispatchEvent(j), this._lastPosition.copy(this.object.position), this._lastQuaternion.copy(this.object.quaternion), this._lastTargetPosition.copy(this.target), !0) : !1;
   }
   _getAutoRotationAngle(t) {
-    return t !== null ? w / 60 * this.autoRotateSpeed * t : w / 60 / 60 * this.autoRotateSpeed;
+    return t !== null ? P / 60 * this.autoRotateSpeed * t : P / 60 / 60 * this.autoRotateSpeed;
   }
   _getZoomScale(t) {
     const e = Math.abs(t * 0.01);
@@ -183,20 +183,20 @@ class J extends K {
     this._sphericalDelta.phi -= t;
   }
   _panLeft(t, e) {
-    b.setFromMatrixColumn(e, 0), b.multiplyScalar(-t), this._panOffset.add(b);
+    w.setFromMatrixColumn(e, 0), w.multiplyScalar(-t), this._panOffset.add(w);
   }
   _panUp(t, e) {
-    this.screenSpacePanning === !0 ? b.setFromMatrixColumn(e, 1) : (b.setFromMatrixColumn(e, 0), b.crossVectors(this.object.up, b)), b.multiplyScalar(t), this._panOffset.add(b);
+    this.screenSpacePanning === !0 ? w.setFromMatrixColumn(e, 1) : (w.setFromMatrixColumn(e, 0), w.crossVectors(this.object.up, w)), w.multiplyScalar(t), this._panOffset.add(w);
   }
   // deltaX and deltaY are in pixels; right and down are positive
   _pan(t, e) {
-    const s = this.domElement;
+    const i = this.domElement;
     if (this.object.isPerspectiveCamera) {
-      const i = this.object.position;
-      b.copy(i).sub(this.target);
-      let a = b.length();
-      a *= Math.tan(this.object.fov / 2 * Math.PI / 180), this._panLeft(2 * t * a / s.clientHeight, this.object.matrix), this._panUp(2 * e * a / s.clientHeight, this.object.matrix);
-    } else this.object.isOrthographicCamera ? (this._panLeft(t * (this.object.right - this.object.left) / this.object.zoom / s.clientWidth, this.object.matrix), this._panUp(e * (this.object.top - this.object.bottom) / this.object.zoom / s.clientHeight, this.object.matrix)) : (console.warn("WARNING: OrbitControls.js encountered an unknown camera type - pan disabled."), this.enablePan = !1);
+      const s = this.object.position;
+      w.copy(s).sub(this.target);
+      let n = w.length();
+      n *= Math.tan(this.object.fov / 2 * Math.PI / 180), this._panLeft(2 * t * n / i.clientHeight, this.object.matrix), this._panUp(2 * e * n / i.clientHeight, this.object.matrix);
+    } else this.object.isOrthographicCamera ? (this._panLeft(t * (this.object.right - this.object.left) / this.object.zoom / i.clientWidth, this.object.matrix), this._panUp(e * (this.object.top - this.object.bottom) / this.object.zoom / i.clientHeight, this.object.matrix)) : (console.warn("WARNING: OrbitControls.js encountered an unknown camera type - pan disabled."), this.enablePan = !1);
   }
   _dollyOut(t) {
     this.object.isPerspectiveCamera || this.object.isOrthographicCamera ? this._scale /= t : (console.warn("WARNING: OrbitControls.js encountered an unknown camera type - dolly/zoom disabled."), this.enableZoom = !1);
@@ -208,8 +208,8 @@ class J extends K {
     if (!this.zoomToCursor)
       return;
     this._performCursorZoom = !0;
-    const s = this.domElement.getBoundingClientRect(), i = t - s.left, a = e - s.top, l = s.width, h = s.height;
-    this._mouse.x = i / l * 2 - 1, this._mouse.y = -(a / h) * 2 + 1, this._dollyDirection.set(this._mouse.x, this._mouse.y, 1).unproject(this.object).sub(this.object.position).normalize();
+    const i = this.domElement.getBoundingClientRect(), s = t - i.left, n = e - i.top, l = i.width, h = i.height;
+    this._mouse.x = s / l * 2 - 1, this._mouse.y = -(n / h) * 2 + 1, this._dollyDirection.set(this._mouse.x, this._mouse.y, 1).unproject(this.object).sub(this.object.position).normalize();
   }
   _clampDistance(t) {
     return Math.max(this.minDistance, Math.min(this.maxDistance, t));
@@ -229,7 +229,7 @@ class J extends K {
   _handleMouseMoveRotate(t) {
     this._rotateEnd.set(t.clientX, t.clientY), this._rotateDelta.subVectors(this._rotateEnd, this._rotateStart).multiplyScalar(this.rotateSpeed);
     const e = this.domElement;
-    this._rotateLeft(w * this._rotateDelta.x / e.clientHeight), this._rotateUp(w * this._rotateDelta.y / e.clientHeight), this._rotateStart.copy(this._rotateEnd), this.update();
+    this._rotateLeft(P * this._rotateDelta.x / e.clientHeight), this._rotateUp(P * this._rotateDelta.y / e.clientHeight), this._rotateStart.copy(this._rotateEnd), this.update();
   }
   _handleMouseMoveDolly(t) {
     this._dollyEnd.set(t.clientX, t.clientY), this._dollyDelta.subVectors(this._dollyEnd, this._dollyStart), this._dollyDelta.y > 0 ? this._dollyOut(this._getZoomScale(this._dollyDelta.y)) : this._dollyDelta.y < 0 && this._dollyIn(this._getZoomScale(this._dollyDelta.y)), this._dollyStart.copy(this._dollyEnd), this.zoomToCursor && (this._performCursorZoom = !0, this._dollyDirection.set(this._mouse.x, this._mouse.y, 1).unproject(this.object).sub(this.object.position).normalize()), this.update();
@@ -244,16 +244,16 @@ class J extends K {
     let e = !1;
     switch (t.code) {
       case this.keys.UP:
-        t.ctrlKey || t.metaKey || t.shiftKey ? this.enableRotate && this._rotateUp(w * this.keyRotateSpeed / this.domElement.clientHeight) : this.enablePan && this._pan(0, this.keyPanSpeed), e = !0;
+        t.ctrlKey || t.metaKey || t.shiftKey ? this.enableRotate && this._rotateUp(P * this.keyRotateSpeed / this.domElement.clientHeight) : this.enablePan && this._pan(0, this.keyPanSpeed), e = !0;
         break;
       case this.keys.BOTTOM:
-        t.ctrlKey || t.metaKey || t.shiftKey ? this.enableRotate && this._rotateUp(-w * this.keyRotateSpeed / this.domElement.clientHeight) : this.enablePan && this._pan(0, -this.keyPanSpeed), e = !0;
+        t.ctrlKey || t.metaKey || t.shiftKey ? this.enableRotate && this._rotateUp(-P * this.keyRotateSpeed / this.domElement.clientHeight) : this.enablePan && this._pan(0, -this.keyPanSpeed), e = !0;
         break;
       case this.keys.LEFT:
-        t.ctrlKey || t.metaKey || t.shiftKey ? this.enableRotate && this._rotateLeft(w * this.keyRotateSpeed / this.domElement.clientHeight) : this.enablePan && this._pan(this.keyPanSpeed, 0), e = !0;
+        t.ctrlKey || t.metaKey || t.shiftKey ? this.enableRotate && this._rotateLeft(P * this.keyRotateSpeed / this.domElement.clientHeight) : this.enablePan && this._pan(this.keyPanSpeed, 0), e = !0;
         break;
       case this.keys.RIGHT:
-        t.ctrlKey || t.metaKey || t.shiftKey ? this.enableRotate && this._rotateLeft(-w * this.keyRotateSpeed / this.domElement.clientHeight) : this.enablePan && this._pan(-this.keyPanSpeed, 0), e = !0;
+        t.ctrlKey || t.metaKey || t.shiftKey ? this.enableRotate && this._rotateLeft(-P * this.keyRotateSpeed / this.domElement.clientHeight) : this.enablePan && this._pan(-this.keyPanSpeed, 0), e = !0;
         break;
     }
     e && (t.preventDefault(), this.update());
@@ -262,21 +262,21 @@ class J extends K {
     if (this._pointers.length === 1)
       this._rotateStart.set(t.pageX, t.pageY);
     else {
-      const e = this._getSecondPointerPosition(t), s = 0.5 * (t.pageX + e.x), i = 0.5 * (t.pageY + e.y);
-      this._rotateStart.set(s, i);
+      const e = this._getSecondPointerPosition(t), i = 0.5 * (t.pageX + e.x), s = 0.5 * (t.pageY + e.y);
+      this._rotateStart.set(i, s);
     }
   }
   _handleTouchStartPan(t) {
     if (this._pointers.length === 1)
       this._panStart.set(t.pageX, t.pageY);
     else {
-      const e = this._getSecondPointerPosition(t), s = 0.5 * (t.pageX + e.x), i = 0.5 * (t.pageY + e.y);
-      this._panStart.set(s, i);
+      const e = this._getSecondPointerPosition(t), i = 0.5 * (t.pageX + e.x), s = 0.5 * (t.pageY + e.y);
+      this._panStart.set(i, s);
     }
   }
   _handleTouchStartDolly(t) {
-    const e = this._getSecondPointerPosition(t), s = t.pageX - e.x, i = t.pageY - e.y, a = Math.sqrt(s * s + i * i);
-    this._dollyStart.set(0, a);
+    const e = this._getSecondPointerPosition(t), i = t.pageX - e.x, s = t.pageY - e.y, n = Math.sqrt(i * i + s * s);
+    this._dollyStart.set(0, n);
   }
   _handleTouchStartDollyPan(t) {
     this.enableZoom && this._handleTouchStartDolly(t), this.enablePan && this._handleTouchStartPan(t);
@@ -288,25 +288,25 @@ class J extends K {
     if (this._pointers.length == 1)
       this._rotateEnd.set(t.pageX, t.pageY);
     else {
-      const s = this._getSecondPointerPosition(t), i = 0.5 * (t.pageX + s.x), a = 0.5 * (t.pageY + s.y);
-      this._rotateEnd.set(i, a);
+      const i = this._getSecondPointerPosition(t), s = 0.5 * (t.pageX + i.x), n = 0.5 * (t.pageY + i.y);
+      this._rotateEnd.set(s, n);
     }
     this._rotateDelta.subVectors(this._rotateEnd, this._rotateStart).multiplyScalar(this.rotateSpeed);
     const e = this.domElement;
-    this._rotateLeft(w * this._rotateDelta.x / e.clientHeight), this._rotateUp(w * this._rotateDelta.y / e.clientHeight), this._rotateStart.copy(this._rotateEnd);
+    this._rotateLeft(P * this._rotateDelta.x / e.clientHeight), this._rotateUp(P * this._rotateDelta.y / e.clientHeight), this._rotateStart.copy(this._rotateEnd);
   }
   _handleTouchMovePan(t) {
     if (this._pointers.length === 1)
       this._panEnd.set(t.pageX, t.pageY);
     else {
-      const e = this._getSecondPointerPosition(t), s = 0.5 * (t.pageX + e.x), i = 0.5 * (t.pageY + e.y);
-      this._panEnd.set(s, i);
+      const e = this._getSecondPointerPosition(t), i = 0.5 * (t.pageX + e.x), s = 0.5 * (t.pageY + e.y);
+      this._panEnd.set(i, s);
     }
     this._panDelta.subVectors(this._panEnd, this._panStart).multiplyScalar(this.panSpeed), this._pan(this._panDelta.x, this._panDelta.y), this._panStart.copy(this._panEnd);
   }
   _handleTouchMoveDolly(t) {
-    const e = this._getSecondPointerPosition(t), s = t.pageX - e.x, i = t.pageY - e.y, a = Math.sqrt(s * s + i * i);
-    this._dollyEnd.set(0, a), this._dollyDelta.set(0, Math.pow(this._dollyEnd.y / this._dollyStart.y, this.zoomSpeed)), this._dollyOut(this._dollyDelta.y), this._dollyStart.copy(this._dollyEnd);
+    const e = this._getSecondPointerPosition(t), i = t.pageX - e.x, s = t.pageY - e.y, n = Math.sqrt(i * i + s * s);
+    this._dollyEnd.set(0, n), this._dollyDelta.set(0, Math.pow(this._dollyEnd.y / this._dollyStart.y, this.zoomSpeed)), this._dollyOut(this._dollyDelta.y), this._dollyStart.copy(this._dollyEnd);
     const l = (t.pageX + e.x) * 0.5, h = (t.pageY + e.y) * 0.5;
     this._updateZoomParameters(l, h);
   }
@@ -343,32 +343,32 @@ class J extends K {
   }
   //
   _customWheelEvent(t) {
-    const e = t.deltaMode, s = {
+    const e = t.deltaMode, i = {
       clientX: t.clientX,
       clientY: t.clientY,
       deltaY: t.deltaY
     };
     switch (e) {
       case 1:
-        s.deltaY *= 16;
+        i.deltaY *= 16;
         break;
       case 2:
-        s.deltaY *= 100;
+        i.deltaY *= 100;
         break;
     }
-    return t.ctrlKey && !this._controlActive && (s.deltaY *= 10), s;
+    return t.ctrlKey && !this._controlActive && (i.deltaY *= 10), i;
   }
 }
-function tt(o) {
+function $(o) {
   this.enabled !== !1 && (this._pointers.length === 0 && (this.domElement.setPointerCapture(o.pointerId), this.domElement.ownerDocument.addEventListener("pointermove", this._onPointerMove), this.domElement.ownerDocument.addEventListener("pointerup", this._onPointerUp)), !this._isTrackingPointer(o) && (this._addPointer(o), o.pointerType === "touch" ? this._onTouchStart(o) : this._onMouseDown(o), this._cursorStyle === "grab" && (this.domElement.style.cursor = "grabbing")));
 }
-function et(o) {
+function Q(o) {
   this.enabled !== !1 && (o.pointerType === "touch" ? this._onTouchMove(o) : this._onMouseMove(o));
 }
-function it(o) {
+function J(o) {
   switch (this._removePointer(o), this._pointers.length) {
     case 0:
-      this.domElement.releasePointerCapture(o.pointerId), this.domElement.ownerDocument.removeEventListener("pointermove", this._onPointerMove), this.domElement.ownerDocument.removeEventListener("pointerup", this._onPointerUp), this.dispatchEvent(F), this.state = g.NONE, this._cursorStyle === "grab" && (this.domElement.style.cursor = "grab");
+      this.domElement.releasePointerCapture(o.pointerId), this.domElement.ownerDocument.removeEventListener("pointermove", this._onPointerMove), this.domElement.ownerDocument.removeEventListener("pointerup", this._onPointerUp), this.dispatchEvent(H), this.state = m.NONE, this._cursorStyle === "grab" && (this.domElement.style.cursor = "grab");
       break;
     case 1:
       const t = this._pointers[0], e = this._pointerPositions[t];
@@ -376,7 +376,7 @@ function it(o) {
       break;
   }
 }
-function st(o) {
+function tt(o) {
   let t;
   switch (o.button) {
     case 0:
@@ -392,264 +392,227 @@ function st(o) {
       t = -1;
   }
   switch (t) {
-    case T.DOLLY:
+    case S.DOLLY:
       if (this.enableZoom === !1) return;
-      this._handleMouseDownDolly(o), this.state = g.DOLLY;
+      this._handleMouseDownDolly(o), this.state = m.DOLLY;
       break;
-    case T.ROTATE:
+    case S.ROTATE:
       if (o.ctrlKey || o.metaKey || o.shiftKey) {
         if (this.enablePan === !1) return;
-        this._handleMouseDownPan(o), this.state = g.PAN;
+        this._handleMouseDownPan(o), this.state = m.PAN;
       } else {
         if (this.enableRotate === !1) return;
-        this._handleMouseDownRotate(o), this.state = g.ROTATE;
+        this._handleMouseDownRotate(o), this.state = m.ROTATE;
       }
       break;
-    case T.PAN:
+    case S.PAN:
       if (o.ctrlKey || o.metaKey || o.shiftKey) {
         if (this.enableRotate === !1) return;
-        this._handleMouseDownRotate(o), this.state = g.ROTATE;
+        this._handleMouseDownRotate(o), this.state = m.ROTATE;
       } else {
         if (this.enablePan === !1) return;
-        this._handleMouseDownPan(o), this.state = g.PAN;
+        this._handleMouseDownPan(o), this.state = m.PAN;
       }
       break;
     default:
-      this.state = g.NONE;
+      this.state = m.NONE;
   }
-  this.state !== g.NONE && this.dispatchEvent(R);
+  this.state !== m.NONE && this.dispatchEvent(R);
 }
-function ot(o) {
+function et(o) {
   switch (this.state) {
-    case g.ROTATE:
+    case m.ROTATE:
       if (this.enableRotate === !1) return;
       this._handleMouseMoveRotate(o);
       break;
-    case g.DOLLY:
+    case m.DOLLY:
       if (this.enableZoom === !1) return;
       this._handleMouseMoveDolly(o);
       break;
-    case g.PAN:
+    case m.PAN:
       if (this.enablePan === !1) return;
       this._handleMouseMovePan(o);
       break;
   }
 }
-function nt(o) {
-  this.enabled === !1 || this.enableZoom === !1 || this.state !== g.NONE || (o.preventDefault(), this.dispatchEvent(R), this._handleMouseWheel(this._customWheelEvent(o)), this.dispatchEvent(F));
+function st(o) {
+  this.enabled === !1 || this.enableZoom === !1 || this.state !== m.NONE || (o.preventDefault(), this.dispatchEvent(R), this._handleMouseWheel(this._customWheelEvent(o)), this.dispatchEvent(H));
 }
-function rt(o) {
+function it(o) {
   this.enabled !== !1 && this._handleKeyDown(o);
 }
-function at(o) {
+function ot(o) {
   switch (this._trackPointer(o), this._pointers.length) {
     case 1:
       switch (this.touches.ONE) {
-        case C.ROTATE:
+        case D.ROTATE:
           if (this.enableRotate === !1) {
-            this.state = g.NONE;
+            this.state = m.NONE;
             break;
           }
-          this._handleTouchStartRotate(o), this.state = g.TOUCH_ROTATE;
+          this._handleTouchStartRotate(o), this.state = m.TOUCH_ROTATE;
           break;
-        case C.PAN:
+        case D.PAN:
           if (this.enablePan === !1) {
-            this.state = g.NONE;
+            this.state = m.NONE;
             break;
           }
-          this._handleTouchStartPan(o), this.state = g.TOUCH_PAN;
+          this._handleTouchStartPan(o), this.state = m.TOUCH_PAN;
           break;
         default:
-          this.state = g.NONE;
+          this.state = m.NONE;
       }
       break;
     case 2:
       switch (this.touches.TWO) {
-        case C.DOLLY_PAN:
+        case D.DOLLY_PAN:
           if (this.enableZoom === !1 && this.enablePan === !1) return;
-          this._handleTouchStartDollyPan(o), this.state = g.TOUCH_DOLLY_PAN;
+          this._handleTouchStartDollyPan(o), this.state = m.TOUCH_DOLLY_PAN;
           break;
-        case C.DOLLY_ROTATE:
+        case D.DOLLY_ROTATE:
           if (this.enableZoom === !1 && this.enableRotate === !1) return;
-          this._handleTouchStartDollyRotate(o), this.state = g.TOUCH_DOLLY_ROTATE;
+          this._handleTouchStartDollyRotate(o), this.state = m.TOUCH_DOLLY_ROTATE;
           break;
         default:
-          this.state = g.NONE;
+          this.state = m.NONE;
       }
       break;
     default:
-      this.state = g.NONE;
+      this.state = m.NONE;
   }
-  this.state !== g.NONE && this.dispatchEvent(R);
+  this.state !== m.NONE && this.dispatchEvent(R);
 }
-function ht(o) {
+function nt(o) {
   switch (this._trackPointer(o), this.state) {
-    case g.TOUCH_ROTATE:
+    case m.TOUCH_ROTATE:
       if (this.enableRotate === !1) return;
       this._handleTouchMoveRotate(o), this.update();
       break;
-    case g.TOUCH_PAN:
+    case m.TOUCH_PAN:
       if (this.enablePan === !1) return;
       this._handleTouchMovePan(o), this.update();
       break;
-    case g.TOUCH_DOLLY_PAN:
+    case m.TOUCH_DOLLY_PAN:
       if (this.enableZoom === !1 && this.enablePan === !1) return;
       this._handleTouchMoveDollyPan(o), this.update();
       break;
-    case g.TOUCH_DOLLY_ROTATE:
+    case m.TOUCH_DOLLY_ROTATE:
       if (this.enableZoom === !1 && this.enableRotate === !1) return;
       this._handleTouchMoveDollyRotate(o), this.update();
       break;
     default:
-      this.state = g.NONE;
+      this.state = m.NONE;
   }
 }
-function lt(o) {
+function at(o) {
   this.enabled !== !1 && o.preventDefault();
 }
-function ct(o) {
+function rt(o) {
   o.key === "Control" && (this._controlActive = !0, this.domElement.ownerDocument.addEventListener("keyup", this._interceptControlUp, { passive: !0, capture: !0 }));
 }
-function dt(o) {
+function ht(o) {
   o.key === "Control" && (this._controlActive = !1, this.domElement.ownerDocument.removeEventListener("keyup", this._interceptControlUp, { passive: !0, capture: !0 }));
 }
-function ut(o, t = !1) {
-  const e = o[0].index !== null, s = new Set(Object.keys(o[0].attributes)), i = new Set(Object.keys(o[0].morphAttributes)), a = {}, l = {}, h = o[0].morphTargetsRelative, d = new q();
-  d.morphTargetsRelative = h;
-  let r = 0;
-  for (let n = 0; n < o.length; ++n) {
-    const u = o[n];
-    let p = 0, f = 0;
-    if (e !== (u.index !== null))
-      return console.error("THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index " + n + ". All geometries must have compatible attributes; make sure index attribute exists among all geometries, or in none of them."), null;
-    for (const m in u.attributes) {
-      if (!s.has(m))
-        return console.error("THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index " + n + '. All geometries must have compatible attributes; make sure "' + m + '" attribute exists among all geometries, or in none of them.'), null;
-      a[m] === void 0 && (a[m] = []), a[m].push(u.attributes[m]), p++;
-    }
-    if (p !== s.size)
-      return console.error("THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index " + n + ". Make sure all geometries have the same number of attributes."), null;
-    if (h !== u.morphTargetsRelative)
-      return console.error("THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index " + n + ". .morphTargetsRelative must be consistent throughout all geometries."), null;
-    for (const m in u.morphAttributes) {
-      if (!i.has(m))
-        return console.error("THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index " + n + ".  .morphAttributes must be consistent throughout all geometries."), null;
-      if (u.morphAttributes[m].length !== o[0].morphAttributes[m].length)
-        return console.error("THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index " + n + '. All geometries must have the same number of morph targets for the "' + m + '" morph attribute.'), null;
-      l[m] === void 0 && (l[m] = []), l[m].push(u.morphAttributes[m]), f++;
-    }
-    if (f !== i.size)
-      return console.error("THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index " + n + ". Make sure all geometries have the same number of morph attributes."), null;
-    if (t) {
-      let m;
-      if (e)
-        m = u.index.count;
-      else if (u.attributes.position !== void 0)
-        m = u.attributes.position.count;
-      else
-        return console.error("THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index " + n + ". The geometry must have either an index or a position attribute"), null;
-      d.addGroup(r, m, n), r += m;
-    }
-  }
-  if (e) {
-    let n = 0;
-    const u = [];
-    for (let p = 0; p < o.length; ++p) {
-      const f = o[p].index;
-      for (let m = 0; m < f.count; ++m)
-        u.push(f.getX(m) + n);
-      n += o[p].attributes.position.count;
-    }
-    d.setIndex(u);
-  }
-  for (const n in a) {
-    const u = z(a[n]);
-    if (!u)
-      return console.error("THREE.BufferGeometryUtils: .mergeGeometries() failed while trying to merge the " + n + " attribute."), null;
-    d.setAttribute(n, u);
-  }
-  for (const n in l) {
-    const u = l[n][0].length;
-    if (u !== 0) {
-      d.morphAttributes = d.morphAttributes || {}, d.morphAttributes[n] = [];
-      for (let p = 0; p < u; ++p) {
-        const f = [];
-        for (let _ = 0; _ < l[n].length; ++_)
-          f.push(l[n][_][p]);
-        const m = z(f);
-        if (!m)
-          return console.error("THREE.BufferGeometryUtils: .mergeGeometries() failed while trying to merge the " + n + " morphAttribute."), null;
-        d.morphAttributes[n].push(m);
-      }
-    }
-  }
-  return d;
-}
-function z(o) {
-  let t, e, s, i = -1, a = 0;
-  for (let r = 0; r < o.length; ++r) {
-    const n = o[r];
-    if (t === void 0 && (t = n.array.constructor), t !== n.array.constructor)
-      return console.error("THREE.BufferGeometryUtils: .mergeAttributes() failed. BufferAttribute.array must be of consistent array types across matching attributes."), null;
-    if (e === void 0 && (e = n.itemSize), e !== n.itemSize)
-      return console.error("THREE.BufferGeometryUtils: .mergeAttributes() failed. BufferAttribute.itemSize must be consistent across matching attributes."), null;
-    if (s === void 0 && (s = n.normalized), s !== n.normalized)
-      return console.error("THREE.BufferGeometryUtils: .mergeAttributes() failed. BufferAttribute.normalized must be consistent across matching attributes."), null;
-    if (i === -1 && (i = n.gpuType), i !== n.gpuType)
-      return console.error("THREE.BufferGeometryUtils: .mergeAttributes() failed. BufferAttribute.gpuType must be consistent across matching attributes."), null;
-    a += n.count * e;
-  }
-  const l = new t(a), h = new $(l, e, s);
-  let d = 0;
-  for (let r = 0; r < o.length; ++r) {
-    const n = o[r];
-    if (n.isInterleavedBufferAttribute) {
-      const u = d / e;
-      for (let p = 0, f = n.count; p < f; p++)
-        for (let m = 0; m < e; m++) {
-          const _ = n.getComponent(p, m);
-          h.setComponent(p + u, m, _);
-        }
-    } else
-      l.set(n.array, d);
-    d += n.count * e;
-  }
-  return i !== void 0 && (h.gpuType = i), h;
-}
-class mt {
-  constructor(t) {
-    this.walls = /* @__PURE__ */ new Map(), this.counter = 0, this.selectedId = null, this.scene = t;
+const lt = {
+  enabled: !0,
+  minOpacity: 0.15,
+  fadeStart: 0.45,
+  fadeEnd: 0.85,
+  fadeSpeed: 8
+};
+class ct {
+  constructor(t, e) {
+    this.walls = /* @__PURE__ */ new Map(), this.counter = 0, this.selectedId = null, this._v = new r.Vector3(), this.scene = t, this.fade = { ...lt, ...e };
   }
   /**
-   * 월드 포인트 배열 → 3D 벽 메시 생성
+   * 월드 포인트 배열 → 3D 벽 메시 생성 (변 단위 메시들의 Group)
    * points: 루프가 닫힌 순서의 바닥면 점들 (미터)
    */
-  buildWall(t, e = { heightM: 3, thicknessM: 0.15 }, s = 9741240) {
+  buildWall(t, e = { heightM: 3, thicknessM: 0.15 }, i = 9741240) {
     if (t.length < 3)
       throw new Error("벽 생성을 위해서는 최소 3개 이상의 점이 필요합니다.");
-    const i = [];
-    for (let r = 0; r < t.length; r++) {
-      const n = t[r], u = t[(r + 1) % t.length], p = u.x - n.x, f = u.z - n.z, m = Math.hypot(p, f);
-      if (m < 1e-4) continue;
-      const _ = new c.BoxGeometry(
+    let s = 0;
+    for (let a = 0; a < t.length; a++) {
+      const c = t[a], u = t[(a + 1) % t.length];
+      s += c.x * u.z - u.x * c.z;
+    }
+    const n = s > 0, l = new r.Group(), h = [];
+    for (let a = 0; a < t.length; a++) {
+      const c = t[a], u = t[(a + 1) % t.length], p = u.x - c.x, f = u.z - c.z, g = Math.hypot(p, f);
+      if (g < 1e-4) continue;
+      const _ = new r.BoxGeometry(
         e.thicknessM,
         e.heightM,
-        m + e.thicknessM
+        g + e.thicknessM
       );
-      _.rotateY(Math.atan2(p, f)), _.translate((n.x + u.x) / 2, e.heightM / 2, (n.z + u.z) / 2), i.push(_);
+      _.rotateY(Math.atan2(p, f)), _.translate((c.x + u.x) / 2, e.heightM / 2, (c.z + u.z) / 2);
+      const b = new r.MeshStandardMaterial({
+        color: i,
+        transparent: !0
+      }), y = new r.Mesh(_, b);
+      let M, C;
+      n ? (M = -f / g, C = p / g) : (M = f / g, C = -p / g), h.push({
+        mesh: y,
+        midpoint: new r.Vector3(
+          (c.x + u.x) / 2,
+          e.heightM / 2,
+          (c.z + u.z) / 2
+        ),
+        outward: new r.Vector3(-M, 0, -C),
+        opacity: 1
+      }), l.add(y);
     }
-    if (i.length === 0)
-      throw new Error("유효한 벽 변이 없습니다.");
-    const a = ut(i);
-    if (i.forEach((r) => r.dispose()), !a)
-      throw new Error("벽 지오메트리 병합에 실패했습니다.");
-    const l = new c.MeshStandardMaterial({ color: s }), h = new c.Mesh(a, l);
-    h.userData.wallId = `wall_${++this.counter}`, this.scene.add(h);
-    const d = h.userData.wallId;
-    return this.walls.set(d, h), d;
+    if (h.length === 0)
+      throw this.disposeGroup(l), new Error("유효한 벽 변이 없습니다.");
+    this.scene.add(l);
+    const d = `wall_${++this.counter}`;
+    return l.userData.wallId = d, this.walls.set(d, { group: l, segments: h }), d;
   }
+  // ───────────────────────────────────────────────────────
+  // 뷰 의존적 페이드 (카메라에 가려지는 앞벽 자동 반투명)
+  // ───────────────────────────────────────────────────────
+  /**
+   * 프레임마다 호출. 카메라 위치와 각 세그먼트의 바깥 법선 코사인(s)으로
+   * 목표 opacity를 정하고, fadeSpeed 기반 지수 보간으로 부드럽게 전환한다.
+   */
+  updateViewDependentOpacity(t, e) {
+    if (!this.fade.enabled || this.walls.size === 0) return;
+    const { minOpacity: i, fadeStart: s, fadeEnd: n, fadeSpeed: l } = this.fade, h = Math.max(n - s, 1e-3), d = 1 - Math.exp(-l * Math.min(e, 0.1)), a = t.position;
+    for (const c of this.walls.values())
+      for (const u of c.segments) {
+        this._v.subVectors(a, u.midpoint);
+        const p = this._v.length();
+        if (p < 1e-6) continue;
+        this._v.multiplyScalar(1 / p);
+        const f = this._v.dot(u.outward), g = Math.min(Math.max((f - s) / h, 0), 1), b = 1 - g * g * (3 - 2 * g) * (1 - i);
+        u.opacity += (b - u.opacity) * d, u.mesh.material.opacity = u.opacity;
+      }
+  }
+  setFadeEnabled(t) {
+    this.fade.enabled = t, t || this.resetOpacities();
+  }
+  isFadeEnabled() {
+    return this.fade.enabled;
+  }
+  setFadeOptions(t) {
+    const e = this.fade.enabled;
+    this.fade = { ...this.fade, ...t }, e && !this.fade.enabled && this.resetOpacities();
+  }
+  getFadeOptions() {
+    return this.fade;
+  }
+  /** 페이드 비활성화 시 모든 세그먼트를 불투명으로 복원 */
+  resetOpacities() {
+    for (const t of this.walls.values())
+      for (const e of t.segments)
+        e.opacity = 1, e.mesh.material.opacity = 1;
+  }
+  // ───────────────────────────────────────────────────────
+  // 조회
+  // ───────────────────────────────────────────────────────
   getWall(t) {
-    return this.walls.get(t);
+    var e;
+    return (e = this.walls.get(t)) == null ? void 0 : e.group;
   }
   getWallCount() {
     return this.walls.size;
@@ -660,16 +623,20 @@ class mt {
   // ───────────────────────────────────────────────────────
   // 선택 / 하이라이트
   // ───────────────────────────────────────────────────────
-  /** 벽 선택 (선택된 벽은 emissive로 하이라이트) */
+  /** 벽 선택 (선택된 벽의 모든 세그먼트를 emissive로 하이라이트) */
   setSelected(t) {
     if (this.selectedId) {
       const e = this.walls.get(this.selectedId);
-      e && e.material.emissive.setHex(0);
+      e && this.setEmissive(e, 0);
     }
     if (this.selectedId = t, t) {
       const e = this.walls.get(t);
-      e && e.material.emissive.setHex(1920728);
+      e && this.setEmissive(e, 1920728);
     }
+  }
+  setEmissive(t, e) {
+    for (const i of t.segments)
+      i.mesh.material.emissive.setHex(e);
   }
   getSelected() {
     return this.selectedId;
@@ -677,9 +644,13 @@ class mt {
   /** 레이캐스트로 가장 가까운 벽 피킹 */
   raycastWalls(t) {
     let e = null;
-    for (const [s, i] of this.walls) {
-      const a = t.intersectObject(i);
-      a.length > 0 && (!e || a[0].distance < e.dist) && (e = { wallId: s, mesh: i, dist: a[0].distance });
+    for (const [i, s] of this.walls) {
+      const n = t.intersectObject(s.group, !0);
+      n.length > 0 && (!e || n[0].distance < e.dist) && (e = {
+        wallId: i,
+        mesh: n[0].object,
+        dist: n[0].distance
+      });
     }
     return e ? { wallId: e.wallId, mesh: e.mesh } : null;
   }
@@ -688,7 +659,17 @@ class mt {
   // ───────────────────────────────────────────────────────
   removeWall(t) {
     const e = this.walls.get(t);
-    e && (this.selectedId === t && (this.selectedId = null), this.scene.remove(e), e.geometry.dispose(), Array.isArray(e.material) ? e.material.forEach((s) => s.dispose()) : e.material.dispose(), this.walls.delete(t));
+    e && (this.selectedId === t && (this.selectedId = null), this.scene.remove(e.group), this.disposeGroup(e.group), this.walls.delete(t));
+  }
+  disposeGroup(t) {
+    var e;
+    for (const i of t.children) {
+      const s = i;
+      (e = s.geometry) == null || e.dispose();
+      const n = s.material;
+      Array.isArray(n) ? n.forEach((l) => l.dispose()) : n == null || n.dispose();
+    }
+    t.clear();
   }
   clearAll() {
     const t = Array.from(this.walls.keys());
@@ -697,7 +678,7 @@ class mt {
     this.selectedId = null;
   }
 }
-const U = {
+const W = {
   running: 2278750,
   // 녹색
   idle: 9741240,
@@ -707,11 +688,11 @@ const U = {
   error: 15680580
   // 빨강
 };
-class pt {
+class dt {
   constructor(t, e = 500) {
-    this.robots = /* @__PURE__ */ new Map(), this.instanceIndex = /* @__PURE__ */ new Map(), this.dummy = new c.Object3D(), this.tmpMatrix = new c.Matrix4(), this.tmpColor = new c.Color(), this.count = 0, this.scene = t, this.maxCount = e;
-    const s = new c.BoxGeometry(1.2, 0.6, 1.8), i = new c.MeshStandardMaterial({ roughness: 0.6 });
-    this.mesh = new c.InstancedMesh(s, i, e), this.mesh.count = 0, this.mesh.instanceMatrix.setUsage(c.DynamicDrawUsage), this.mesh.frustumCulled = !1, this.mesh.name = "AcsRobots", t.add(this.mesh);
+    this.robots = /* @__PURE__ */ new Map(), this.instanceIndex = /* @__PURE__ */ new Map(), this.dummy = new r.Object3D(), this.tmpMatrix = new r.Matrix4(), this.tmpColor = new r.Color(), this.count = 0, this.scene = t, this.maxCount = e;
+    const i = new r.BoxGeometry(1.2, 0.6, 1.8), s = new r.MeshStandardMaterial({ roughness: 0.6 });
+    this.mesh = new r.InstancedMesh(i, s, e), this.mesh.count = 0, this.mesh.instanceMatrix.setUsage(r.DynamicDrawUsage), this.mesh.frustumCulled = !1, this.mesh.name = "AcsRobots", t.add(this.mesh);
   }
   getMesh() {
     return this.mesh;
@@ -721,38 +702,38 @@ class pt {
   }
   /** 로봇 좌표 수신 (신규면 등록, 기존이면 목표 갱신) */
   updateRobotPose(t) {
-    const e = U[t.status] ?? U.idle, s = t.theta !== void 0 && t.theta !== null;
-    let i = this.robots.get(t.id);
-    if (i)
-      i.target = { x: t.x, z: t.y }, i.status = t.status, i.lastUpdate = Date.now(), i.hasTargetHeading = s, s && (i.targetHeading = -c.MathUtils.degToRad(t.theta));
+    const e = W[t.status] ?? W.idle, i = t.theta !== void 0 && t.theta !== null;
+    let s = this.robots.get(t.id);
+    if (s)
+      s.target = { x: t.x, z: t.y }, s.status = t.status, s.lastUpdate = Date.now(), s.hasTargetHeading = i, i && (s.targetHeading = -r.MathUtils.degToRad(t.theta));
     else {
       if (this.count >= this.maxCount) return;
-      const a = this.count++;
-      this.instanceIndex.set(t.id, a), this.mesh.count = this.count, i = {
+      const n = this.count++;
+      this.instanceIndex.set(t.id, n), this.mesh.count = this.count, s = {
         id: t.id,
         current: { x: t.x, z: t.y },
         target: { x: t.x, z: t.y },
-        heading: s ? -c.MathUtils.degToRad(t.theta) : 0,
-        targetHeading: s ? -c.MathUtils.degToRad(t.theta) : 0,
-        hasTargetHeading: s,
+        heading: i ? -r.MathUtils.degToRad(t.theta) : 0,
+        targetHeading: i ? -r.MathUtils.degToRad(t.theta) : 0,
+        hasTargetHeading: i,
         status: t.status,
         lastUpdate: Date.now()
-      }, this.robots.set(t.id, i), this.dummy.position.set(i.current.x, 0.3, i.current.z), this.dummy.rotation.set(0, i.heading, 0), this.dummy.updateMatrix(), this.mesh.setMatrixAt(a, this.dummy.matrix);
+      }, this.robots.set(t.id, s), this.dummy.position.set(s.current.x, 0.3, s.current.z), this.dummy.rotation.set(0, s.heading, 0), this.dummy.updateMatrix(), this.mesh.setMatrixAt(n, this.dummy.matrix);
     }
     this.tmpColor.setHex(e), this.mesh.setColorAt(this.instanceIndex.get(t.id), this.tmpColor), this.mesh.instanceColor && (this.mesh.instanceColor.needsUpdate = !0);
   }
   removeRobot(t) {
     const e = this.instanceIndex.get(t);
     if (e === void 0) return;
-    const s = this.count - 1;
-    if (e !== s) {
-      let i = null;
-      for (const [a, l] of this.instanceIndex)
-        if (l === s) {
-          i = a;
+    const i = this.count - 1;
+    if (e !== i) {
+      let s = null;
+      for (const [n, l] of this.instanceIndex)
+        if (l === i) {
+          s = n;
           break;
         }
-      i && (this.instanceIndex.set(i, e), this.mesh.getMatrixAt(s, this.tmpMatrix), this.mesh.setMatrixAt(e, this.tmpMatrix), this.mesh.instanceColor && (this.mesh.getColorAt(s, this.tmpColor), this.mesh.setColorAt(e, this.tmpColor)));
+      s && (this.instanceIndex.set(s, e), this.mesh.getMatrixAt(i, this.tmpMatrix), this.mesh.setMatrixAt(e, this.tmpMatrix), this.mesh.instanceColor && (this.mesh.getColorAt(i, this.tmpColor), this.mesh.setColorAt(e, this.tmpColor)));
     }
     this.count--, this.mesh.count = this.count, this.instanceIndex.delete(t), this.robots.delete(t), this.mesh.instanceMatrix.needsUpdate = !0, this.mesh.instanceColor && (this.mesh.instanceColor.needsUpdate = !0);
   }
@@ -761,37 +742,37 @@ class pt {
   }
   /** instanceId → robotId (클릭 피킹용) */
   getRobotIdByInstance(t) {
-    for (const [e, s] of this.instanceIndex)
-      if (s === t) return e;
+    for (const [e, i] of this.instanceIndex)
+      if (i === t) return e;
     return null;
   }
   /** 매 프레임 호출: Lerp 보간 + 인스턴스 행렬 갱신 */
   update(t) {
     if (this.robots.size === 0) return;
-    const e = Math.min(1, t * 3), s = Math.min(1, t * 5);
-    for (const i of this.robots.values()) {
-      const a = i.target.x - i.current.x, l = i.target.z - i.current.z;
-      i.current.x += a * e, i.current.z += l * e, i.hasTargetHeading || Math.hypot(a, l) > 0.05 && (i.targetHeading = Math.atan2(a, l));
-      let h = i.targetHeading - i.heading;
+    const e = Math.min(1, t * 3), i = Math.min(1, t * 5);
+    for (const s of this.robots.values()) {
+      const n = s.target.x - s.current.x, l = s.target.z - s.current.z;
+      s.current.x += n * e, s.current.z += l * e, s.hasTargetHeading || Math.hypot(n, l) > 0.05 && (s.targetHeading = Math.atan2(n, l));
+      let h = s.targetHeading - s.heading;
       for (; h > Math.PI; ) h -= Math.PI * 2;
       for (; h < -Math.PI; ) h += Math.PI * 2;
-      i.heading += h * s;
-      const d = this.instanceIndex.get(i.id);
-      this.dummy.position.set(i.current.x, 0.3, i.current.z), this.dummy.rotation.set(0, i.heading, 0), this.dummy.updateMatrix(), this.mesh.setMatrixAt(d, this.dummy.matrix);
+      s.heading += h * i;
+      const d = this.instanceIndex.get(s.id);
+      this.dummy.position.set(s.current.x, 0.3, s.current.z), this.dummy.rotation.set(0, s.heading, 0), this.dummy.updateMatrix(), this.mesh.setMatrixAt(d, this.dummy.matrix);
     }
     this.mesh.instanceMatrix.needsUpdate = !0;
   }
   /** 60초 이상 갱신 없는 로봇 제거 */
   sweepStale(t = 6e4) {
     const e = Date.now();
-    for (const [s, i] of this.robots)
-      e - i.lastUpdate >= t && this.removeRobot(s);
+    for (const [i, s] of this.robots)
+      e - s.lastUpdate >= t && this.removeRobot(i);
   }
   dispose() {
     this.scene.remove(this.mesh), this.mesh.geometry.dispose(), this.mesh.material.dispose(), this.robots.clear(), this.instanceIndex.clear();
   }
 }
-const D = {
+const I = {
   charge: 16096779,
   // 충전노드 — 앰버
   rack: 9133302,
@@ -804,30 +785,30 @@ const D = {
   // 대기노드 (Axbis nodeType 2, idleParking) — 틸
   normal: 2282478
   // 일반 — 시안
-}, H = 2450411, W = 6583435;
-function Y(o) {
+}, U = 2450411, Y = 6583435;
+function G(o) {
   if (o.kind) return o.kind;
   const t = o.nodeId.toUpperCase();
   return t.startsWith("RACK") ? "rack" : /^T\d+$/.test(t) ? "charge" : "normal";
 }
-function ft(o, t) {
-  const e = document.createElement("canvas"), s = 10, i = "bold 44px ui-monospace, SFMono-Regular, monospace", a = e.getContext("2d");
-  a.font = i;
-  const l = Math.ceil(a.measureText(o).width);
-  e.width = l + s * 2, e.height = 60;
+function ut(o, t) {
+  const e = document.createElement("canvas"), i = 10, s = "bold 44px ui-monospace, SFMono-Regular, monospace", n = e.getContext("2d");
+  n.font = s;
+  const l = Math.ceil(n.measureText(o).width);
+  e.width = l + i * 2, e.height = 60;
   const h = e.getContext("2d");
-  h.font = i, h.fillStyle = "rgba(2, 6, 23, 0.78)", h.fillRect(0, 0, e.width, e.height), h.fillStyle = t, h.textBaseline = "middle", h.fillText(o, s, e.height / 2 + 2);
-  const d = new c.CanvasTexture(e);
-  d.colorSpace = c.SRGBColorSpace;
-  const r = new c.Sprite(
-    new c.SpriteMaterial({ map: d, transparent: !0, depthTest: !1 })
-  ), n = 0.5;
-  return r.scale.set(n * e.width / e.height, n, 1), r.renderOrder = 10, r.raycast = () => {
-  }, r;
+  h.font = s, h.fillStyle = "rgba(2, 6, 23, 0.78)", h.fillRect(0, 0, e.width, e.height), h.fillStyle = t, h.textBaseline = "middle", h.fillText(o, i, e.height / 2 + 2);
+  const d = new r.CanvasTexture(e);
+  d.colorSpace = r.SRGBColorSpace;
+  const a = new r.Sprite(
+    new r.SpriteMaterial({ map: d, transparent: !0, depthTest: !1 })
+  ), c = 0.5;
+  return a.scale.set(c * e.width / e.height, c, 1), a.renderOrder = 10, a.raycast = () => {
+  }, a;
 }
-class gt {
+class pt {
   constructor(t) {
-    this.group = new c.Group(), this.nodeMesh = null, this.nodeIds = [], this.nodeKindColors = [], this.nodePositions = /* @__PURE__ */ new Map(), this.lineColors = null, this.lineColorAttr = null, this.edgeVertex = /* @__PURE__ */ new Map(), this.highlightedNodes = /* @__PURE__ */ new Set(), this.highlightedEdges = /* @__PURE__ */ new Set(), this.options = {
+    this.group = new r.Group(), this.nodeMesh = null, this.nodeIds = [], this.nodeKindColors = [], this.nodePositions = /* @__PURE__ */ new Map(), this.lineColors = null, this.lineColorAttr = null, this.edgeVertex = /* @__PURE__ */ new Map(), this.highlightedNodes = /* @__PURE__ */ new Set(), this.highlightedEdges = /* @__PURE__ */ new Set(), this.options = {
       unit: "mm",
       flipZ: !1,
       showLabels: !0,
@@ -838,48 +819,48 @@ class gt {
   load(t, e) {
     var h, d;
     this.clear(), e && (this.options = { ...this.options, ...e });
-    const s = this.options.unit === "m" ? 1 : 1e-3, i = this.options.flipZ ? -1 : 1, a = [];
-    for (const r of t.nodes ?? []) {
-      const n = Number((h = r.nodePosition) == null ? void 0 : h.x), u = Number((d = r.nodePosition) == null ? void 0 : d.y);
-      if (isNaN(n) || isNaN(u)) continue;
-      const p = n * s, f = i * u * s;
-      a.push({ node: r, x: p, z: f }), this.nodePositions.set(r.nodeId, { x: p, z: f });
+    const i = this.options.unit === "m" ? 1 : 1e-3, s = this.options.flipZ ? -1 : 1, n = [];
+    for (const a of t.nodes ?? []) {
+      const c = Number((h = a.nodePosition) == null ? void 0 : h.x), u = Number((d = a.nodePosition) == null ? void 0 : d.y);
+      if (isNaN(c) || isNaN(u)) continue;
+      const p = c * i, f = s * u * i;
+      n.push({ node: a, x: p, z: f }), this.nodePositions.set(a.nodeId, { x: p, z: f });
     }
-    if (a.length > 0) {
-      const r = this.options.nodeSize, n = new c.CylinderGeometry(r, r, 0.06, 24), u = new c.MeshBasicMaterial();
-      this.nodeMesh = new c.InstancedMesh(n, u, a.length), this.nodeMesh.frustumCulled = !1, this.nodeMesh.name = "AcsGraphNodes";
-      const p = new c.Object3D();
-      a.forEach((f, m) => {
+    if (n.length > 0) {
+      const a = this.options.nodeSize, c = new r.CylinderGeometry(a, a, 0.06, 24), u = new r.MeshBasicMaterial();
+      this.nodeMesh = new r.InstancedMesh(c, u, n.length), this.nodeMesh.frustumCulled = !1, this.nodeMesh.name = "AcsGraphNodes";
+      const p = new r.Object3D();
+      n.forEach((f, g) => {
         this.nodeIds.push(f.node.nodeId);
-        const _ = new c.Color(
-          D[Y(f.node)] ?? D.normal
+        const _ = new r.Color(
+          I[G(f.node)] ?? I.normal
         );
-        this.nodeKindColors.push(_), p.position.set(f.x, 0.04, f.z), p.scale.setScalar(1), p.updateMatrix(), this.nodeMesh.setMatrixAt(m, p.matrix), this.nodeMesh.setColorAt(m, _);
+        this.nodeKindColors.push(_), p.position.set(f.x, 0.04, f.z), p.scale.setScalar(1), p.updateMatrix(), this.nodeMesh.setMatrixAt(g, p.matrix), this.nodeMesh.setColorAt(g, _);
       }), this.nodeMesh.instanceColor && (this.nodeMesh.instanceColor.needsUpdate = !0), this.group.add(this.nodeMesh);
     }
     if (this.options.showLabels)
-      for (const r of a) {
-        const n = new c.Color(
-          D[Y(r.node)] ?? D.normal
-        ), u = ft(r.node.nodeId, `#${n.getHexString()}`);
-        u.position.set(r.x, 0.55, r.z), this.group.add(u);
+      for (const a of n) {
+        const c = new r.Color(
+          I[G(a.node)] ?? I.normal
+        ), u = ut(a.node.nodeId, `#${c.getHexString()}`);
+        u.position.set(a.x, 0.55, a.z), this.group.add(u);
       }
     const l = (t.edges ?? []).filter(
-      (r) => this.nodePositions.has(r.startNodeId) && this.nodePositions.has(r.endNodeId)
+      (a) => this.nodePositions.has(a.startNodeId) && this.nodePositions.has(a.endNodeId)
     );
     if (l.length > 0) {
-      const r = new Float32Array(l.length * 2 * 3), n = new Float32Array(l.length * 2 * 3), u = new c.Color(W);
-      l.forEach((m, _) => {
-        const y = this.nodePositions.get(m.startNodeId), M = this.nodePositions.get(m.endNodeId);
-        r.set([y.x, 0.05, y.z, M.x, 0.05, M.z], _ * 6), n.set([u.r, u.g, u.b, u.r, u.g, u.b], _ * 6);
-        const P = m.edgeId ?? `${m.startNodeId}-${m.endNodeId}`;
-        this.edgeVertex.set(P, _ * 2);
+      const a = new Float32Array(l.length * 2 * 3), c = new Float32Array(l.length * 2 * 3), u = new r.Color(Y);
+      l.forEach((g, _) => {
+        const b = this.nodePositions.get(g.startNodeId), y = this.nodePositions.get(g.endNodeId);
+        a.set([b.x, 0.05, b.z, y.x, 0.05, y.z], _ * 6), c.set([u.r, u.g, u.b, u.r, u.g, u.b], _ * 6);
+        const M = g.edgeId ?? `${g.startNodeId}-${g.endNodeId}`;
+        this.edgeVertex.set(M, _ * 2);
       });
-      const p = new c.BufferGeometry();
-      p.setAttribute("position", new c.BufferAttribute(r, 3)), this.lineColorAttr = new c.BufferAttribute(n, 3), p.setAttribute("color", this.lineColorAttr);
-      const f = new c.LineSegments(
+      const p = new r.BufferGeometry();
+      p.setAttribute("position", new r.BufferAttribute(a, 3)), this.lineColorAttr = new r.BufferAttribute(c, 3), p.setAttribute("color", this.lineColorAttr);
+      const f = new r.LineSegments(
         p,
-        new c.LineBasicMaterial({ vertexColors: !0 })
+        new r.LineBasicMaterial({ vertexColors: !0 })
       );
       f.frustumCulled = !1, this.group.add(f);
     }
@@ -889,10 +870,10 @@ class gt {
   // ───────────────────────────────────────────────────────
   /** 레이캐스트 → 클릭된 노드 ID */
   raycastNode(t) {
-    var i;
+    var s;
     if (!this.nodeMesh) return null;
-    const s = (i = t.intersectObject(this.nodeMesh)[0]) == null ? void 0 : i.instanceId;
-    return s === void 0 || s >= this.nodeIds.length ? null : this.nodeIds[s] ?? null;
+    const i = (s = t.intersectObject(this.nodeMesh)[0]) == null ? void 0 : s.instanceId;
+    return i === void 0 || i >= this.nodeIds.length ? null : this.nodeIds[i] ?? null;
   }
   // ───────────────────────────────────────────────────────
   // 하이라이트 (경로 표시용)
@@ -910,28 +891,28 @@ class gt {
   }
   refreshNodeInstances() {
     if (!this.nodeMesh) return;
-    const t = new c.Object3D(), e = new c.Color(H);
-    this.nodeIds.forEach((s, i) => {
-      const a = this.nodePositions.get(s), l = this.highlightedNodes.has(s);
-      t.position.set(a.x, 0.04, a.z), t.scale.setScalar(l ? 1.6 : 1), t.updateMatrix(), this.nodeMesh.setMatrixAt(i, t.matrix), this.nodeMesh.setColorAt(i, l ? e : this.nodeKindColors[i]);
+    const t = new r.Object3D(), e = new r.Color(U);
+    this.nodeIds.forEach((i, s) => {
+      const n = this.nodePositions.get(i), l = this.highlightedNodes.has(i);
+      t.position.set(n.x, 0.04, n.z), t.scale.setScalar(l ? 1.6 : 1), t.updateMatrix(), this.nodeMesh.setMatrixAt(s, t.matrix), this.nodeMesh.setColorAt(s, l ? e : this.nodeKindColors[s]);
     }), this.nodeMesh.instanceMatrix.needsUpdate = !0, this.nodeMesh.instanceColor && (this.nodeMesh.instanceColor.needsUpdate = !0);
   }
   refreshEdgeColors() {
     if (!this.lineColors || !this.lineColorAttr) return;
-    const t = new c.Color(W), e = new c.Color(H);
-    for (const [, s] of this.edgeVertex) {
-      const i = this.highlightedEdges.has(
-        this.edgeKeyAt(s)
+    const t = new r.Color(Y), e = new r.Color(U);
+    for (const [, i] of this.edgeVertex) {
+      const s = this.highlightedEdges.has(
+        this.edgeKeyAt(i)
       ) ? e : t;
-      for (const a of [s, s + 1])
-        this.lineColors[a * 3] = i.r, this.lineColors[a * 3 + 1] = i.g, this.lineColors[a * 3 + 2] = i.b;
+      for (const n of [i, i + 1])
+        this.lineColors[n * 3] = s.r, this.lineColors[n * 3 + 1] = s.g, this.lineColors[n * 3 + 2] = s.b;
     }
     this.lineColorAttr.needsUpdate = !0;
   }
   /** 정점 오프셋 → 엣지 키 역 조회 */
   edgeKeyAt(t) {
-    for (const [e, s] of this.edgeVertex)
-      if (s === t) return e;
+    for (const [e, i] of this.edgeVertex)
+      if (i === t) return e;
     return "";
   }
   // ───────────────────────────────────────────────────────
@@ -955,37 +936,37 @@ class gt {
     this.nodeMesh = null, this.nodeIds = [], this.nodeKindColors = [], this.nodePositions.clear(), this.lineColors = null, this.lineColorAttr = null, this.edgeVertex.clear(), this.highlightedNodes.clear(), this.highlightedEdges.clear();
   }
   disposeChild(t) {
-    var s;
+    var i;
     const e = t;
-    if ((s = e.geometry) == null || s.dispose(), Array.isArray(e.material))
-      e.material.forEach((i) => i.dispose());
+    if ((i = e.geometry) == null || i.dispose(), Array.isArray(e.material))
+      e.material.forEach((s) => s.dispose());
     else if (e.material) {
-      const i = e.material.map;
-      i == null || i.dispose(), e.material.dispose();
+      const s = e.material.map;
+      s == null || s.dispose(), e.material.dispose();
     }
   }
   dispose() {
     this.clear(), this.scene.remove(this.group);
   }
 }
-class Pt {
+class bt {
   constructor(t, e = {}) {
-    this.raycaster = new c.Raycaster(), this.clock = new c.Clock(), this.calibration = null, this.mapPlane = null, this.wallDrawing = !1, this.wallMarkers = new c.Group(), this.markerGeo = new c.SphereGeometry(0.15, 12, 12), this.markerMat = new c.MeshBasicMaterial({ color: 2282478 }), this.previewPositions = new Float32Array(512 * 3), this.previewGeo = new c.BufferGeometry(), this.downX = 0, this.downY = 0, this.handlePointerDown = (d) => {
+    this.raycaster = new r.Raycaster(), this.clock = new r.Clock(), this.calibration = null, this.mapPlane = null, this.wallDrawing = !1, this.wallMarkers = new r.Group(), this.markerGeo = new r.SphereGeometry(0.15, 12, 12), this.markerMat = new r.MeshBasicMaterial({ color: 2282478 }), this.previewPositions = new Float32Array(512 * 3), this.previewGeo = new r.BufferGeometry(), this.downX = 0, this.downY = 0, this.handlePointerDown = (d) => {
       this.downX = d.clientX, this.downY = d.clientY;
     }, this.handlePointerUp = (d) => {
-      var f, m, _, y, M;
+      var f, g, _, b, y;
       if (Math.hypot(d.clientX - this.downX, d.clientY - this.downY) > 5) return;
       if (this.wallDrawing) {
-        const P = this.raycastFloor(d.clientX, d.clientY);
-        P && this.addWallPointWorld(P.x, P.z);
+        const M = this.raycastFloor(d.clientX, d.clientY);
+        M && this.addWallPointWorld(M.x, M.z);
         return;
       }
       if (!this.setRaycasterFromScreen(d.clientX, d.clientY)) return;
-      const n = (f = this.raycaster.intersectObject(this.robotManager.getMesh())[0]) == null ? void 0 : f.instanceId;
-      if (n !== void 0) {
-        const P = this.robotManager.getRobotIdByInstance(n);
-        if (P) {
-          (m = this.onRobotClickCb) == null || m.call(this, P);
+      const c = (f = this.raycaster.intersectObject(this.robotManager.getMesh())[0]) == null ? void 0 : f.instanceId;
+      if (c !== void 0) {
+        const M = this.robotManager.getRobotIdByInstance(c);
+        if (M) {
+          (g = this.onRobotClickCb) == null || g.call(this, M);
           return;
         }
       }
@@ -995,33 +976,33 @@ class Pt {
         return;
       }
       const p = this.wallBuilder.raycastWalls(this.raycaster);
-      p ? (this.wallBuilder.setSelected(p.wallId), (y = this.onWallSelectedCb) == null || y.call(this, p.wallId)) : (this.wallBuilder.setSelected(null), (M = this.onWallSelectedCb) == null || M.call(this, null));
+      p ? (this.wallBuilder.setSelected(p.wallId), (b = this.onWallSelectedCb) == null || b.call(this, p.wallId)) : (this.wallBuilder.setSelected(null), (y = this.onWallSelectedCb) == null || y.call(this, null));
     }, this.animate = () => {
       requestAnimationFrame(() => this.animate());
       const d = this.clock.getDelta();
-      this.robotManager.update(d), this.controls.update(), this.renderer.render(this.scene, this.camera);
+      this.robotManager.update(d), this.controls.update(), this.wallBuilder.updateViewDependentOpacity(this.camera, d), this.renderer.render(this.scene, this.camera);
     }, this.pendingPoints = [], this.container = t;
-    const s = e.width ?? (t.clientWidth || 800), i = e.height ?? (t.clientHeight || 600);
-    this.scene = new c.Scene(), this.scene.background = new c.Color(e.backgroundColor ?? 725280), this.scene.fog = new c.Fog(
+    const i = e.width ?? (t.clientWidth || 800), s = e.height ?? (t.clientHeight || 600);
+    this.scene = new r.Scene(), this.scene.background = new r.Color(e.backgroundColor ?? 725280), this.scene.fog = new r.Fog(
       725280,
       e.fogNear ?? 80,
       e.fogFar ?? 300
-    ), this.camera = new c.PerspectiveCamera(50, s / i, 0.1, 500), this.camera.position.set(30, 28, 30), this.renderer = new c.WebGLRenderer({ antialias: !0 }), this.renderer.setSize(s, i), this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)), this.container.appendChild(this.renderer.domElement), this.controls = new J(this.camera, this.renderer.domElement), this.controls.enableDamping = !0, this.controls.dampingFactor = 0.05, this.controls.target.set(0, 0, 0);
-    const a = new c.GridHelper(100, 50, 3359061, 1120295);
-    this.scene.add(a);
-    const l = new c.Mesh(
-      new c.PlaneGeometry(120, 120),
-      new c.MeshStandardMaterial({ color: 988970, roughness: 1 })
+    ), this.camera = new r.PerspectiveCamera(50, i / s, 0.1, 500), this.camera.position.set(30, 28, 30), this.renderer = new r.WebGLRenderer({ antialias: !0 }), this.renderer.setSize(i, s), this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)), this.container.appendChild(this.renderer.domElement), this.controls = new q(this.camera, this.renderer.domElement), this.controls.enableDamping = !0, this.controls.dampingFactor = 0.05, this.controls.target.set(0, 0, 0);
+    const n = new r.GridHelper(100, 50, 3359061, 1120295);
+    this.scene.add(n);
+    const l = new r.Mesh(
+      new r.PlaneGeometry(120, 120),
+      new r.MeshStandardMaterial({ color: 988970, roughness: 1 })
     );
-    l.rotation.x = -Math.PI / 2, l.position.y = -0.01, this.scene.add(l), this.scene.add(new c.AmbientLight(16777215, 0.5));
-    const h = new c.DirectionalLight(16777215, 1.2);
+    l.rotation.x = -Math.PI / 2, l.position.y = -0.01, this.scene.add(l), this.scene.add(new r.AmbientLight(16777215, 0.5));
+    const h = new r.DirectionalLight(16777215, 1.2);
     h.position.set(30, 40, 20), this.scene.add(h), this.scene.add(this.wallMarkers), this.previewGeo.setAttribute(
       "position",
-      new c.BufferAttribute(this.previewPositions, 3)
-    ), this.previewGeo.setDrawRange(0, 0), this.previewLine = new c.Line(
+      new r.BufferAttribute(this.previewPositions, 3)
+    ), this.previewGeo.setDrawRange(0, 0), this.previewLine = new r.Line(
       this.previewGeo,
-      new c.LineBasicMaterial({ color: 2282478 })
-    ), this.scene.add(this.previewLine), this.wallBuilder = new mt(this.scene), this.robotManager = new pt(this.scene), this.mapGraph = new gt(this.scene), this.renderer.domElement.addEventListener("pointerdown", this.handlePointerDown), this.renderer.domElement.addEventListener("pointerup", this.handlePointerUp), this.handleResize = this.handleResize.bind(this), window.addEventListener("resize", this.handleResize), this.animate();
+      new r.LineBasicMaterial({ color: 2282478 })
+    ), this.scene.add(this.previewLine), this.wallBuilder = new ct(this.scene, e.wallFade), this.robotManager = new dt(this.scene), this.mapGraph = new pt(this.scene), this.renderer.domElement.addEventListener("pointerdown", this.handlePointerDown), this.renderer.domElement.addEventListener("pointerup", this.handlePointerUp), this.handleResize = this.handleResize.bind(this), window.addEventListener("resize", this.handleResize), this.animate();
   }
   handleResize() {
     const t = this.container.clientWidth || 800, e = this.container.clientHeight || 600;
@@ -1029,19 +1010,19 @@ class Pt {
   }
   /** 화면 좌표로 레이캐스터 설정 */
   setRaycasterFromScreen(t, e) {
-    const s = this.renderer.domElement.getBoundingClientRect();
-    if (s.width === 0 || s.height === 0) return !1;
-    const i = new c.Vector2(
-      (t - s.left) / s.width * 2 - 1,
-      -((e - s.top) / s.height) * 2 + 1
+    const i = this.renderer.domElement.getBoundingClientRect();
+    if (i.width === 0 || i.height === 0) return !1;
+    const s = new r.Vector2(
+      (t - i.left) / i.width * 2 - 1,
+      -((e - i.top) / i.height) * 2 + 1
     );
-    return this.raycaster.setFromCamera(i, this.camera), !0;
+    return this.raycaster.setFromCamera(s, this.camera), !0;
   }
   /** 화면 클릭 좌표 → 바닥면(Y=0) 교차점 (월드 좌표) */
   raycastFloor(t, e) {
     if (!this.setRaycasterFromScreen(t, e)) return null;
-    const s = new c.Plane(new c.Vector3(0, 1, 0), 0), i = new c.Vector3();
-    return this.raycaster.ray.intersectPlane(s, i) ? { x: i.x, z: i.z } : null;
+    const i = new r.Plane(new r.Vector3(0, 1, 0), 0), s = new r.Vector3();
+    return this.raycaster.ray.intersectPlane(i, s) ? { x: s.x, z: s.z } : null;
   }
   // ───────────────────────────────────────────────────────
   // 맵 이미지
@@ -1059,32 +1040,32 @@ class Pt {
    *             - 없으면: 맵 중심이 원점에 오도록 배치
    */
   loadMapImage(t, e) {
-    const s = (i) => {
-      var m, _, y, M, P, I, k, N;
-      if (i.colorSpace = c.SRGBColorSpace, i.flipY = !1, this.mapPlane) {
+    const i = (s) => {
+      var g, _, b, y, M, C, O, k;
+      if (s.colorSpace = r.SRGBColorSpace, s.flipY = !1, this.mapPlane) {
         this.scene.remove(this.mapPlane), this.mapPlane.geometry.dispose();
-        const O = this.mapPlane.material;
-        (m = O.map) == null || m.dispose(), O.dispose();
+        const N = this.mapPlane.material;
+        (g = N.map) == null || g.dispose(), N.dispose();
       }
-      const a = (e == null ? void 0 : e.widthPx) ?? ((_ = this.calibration) == null ? void 0 : _.imageWidthPx) ?? 1024, l = (e == null ? void 0 : e.heightPx) ?? ((y = this.calibration) == null ? void 0 : y.imageHeightPx) ?? 1024, h = (e == null ? void 0 : e.resolutionMPerPx) ?? ((M = this.calibration) == null ? void 0 : M.resolutionMPerPx), d = h != null ? a * h : ((P = this.calibration) == null ? void 0 : P.realWidthM) ?? 50, r = h != null ? l * h : ((I = this.calibration) == null ? void 0 : I.realHeightM) ?? 28;
-      let n, u;
-      (e == null ? void 0 : e.originX) !== void 0 || (e == null ? void 0 : e.originY) !== void 0 ? (n = e.originX ?? 0, u = e.originY ?? 0) : ((k = this.calibration) == null ? void 0 : k.originX) !== void 0 || ((N = this.calibration) == null ? void 0 : N.originY) !== void 0 ? (n = this.calibration.originX ?? 0, u = this.calibration.originY ?? 0) : (n = -d / 2, u = -r / 2), this.calibration = {
-        imageWidthPx: a,
+      const n = (e == null ? void 0 : e.widthPx) ?? ((_ = this.calibration) == null ? void 0 : _.imageWidthPx) ?? 1024, l = (e == null ? void 0 : e.heightPx) ?? ((b = this.calibration) == null ? void 0 : b.imageHeightPx) ?? 1024, h = (e == null ? void 0 : e.resolutionMPerPx) ?? ((y = this.calibration) == null ? void 0 : y.resolutionMPerPx), d = h != null ? n * h : ((M = this.calibration) == null ? void 0 : M.realWidthM) ?? 50, a = h != null ? l * h : ((C = this.calibration) == null ? void 0 : C.realHeightM) ?? 28;
+      let c, u;
+      (e == null ? void 0 : e.originX) !== void 0 || (e == null ? void 0 : e.originY) !== void 0 ? (c = e.originX ?? 0, u = e.originY ?? 0) : ((O = this.calibration) == null ? void 0 : O.originX) !== void 0 || ((k = this.calibration) == null ? void 0 : k.originY) !== void 0 ? (c = this.calibration.originX ?? 0, u = this.calibration.originY ?? 0) : (c = -d / 2, u = -a / 2), this.calibration = {
+        imageWidthPx: n,
         imageHeightPx: l,
         realWidthM: d,
-        realHeightM: r,
-        originX: n,
+        realHeightM: a,
+        originX: c,
         originY: u,
         resolutionMPerPx: h ?? void 0
       };
-      const p = new c.PlaneGeometry(d, r), f = new c.MeshStandardMaterial({ map: i, roughness: 1 });
-      this.mapPlane = new c.Mesh(p, f), this.mapPlane.rotation.x = -Math.PI / 2, this.mapPlane.position.set(n + d / 2, 0.01, u + r / 2), this.scene.add(this.mapPlane);
+      const p = new r.PlaneGeometry(d, a), f = new r.MeshStandardMaterial({ map: s, roughness: 1 });
+      this.mapPlane = new r.Mesh(p, f), this.mapPlane.rotation.x = -Math.PI / 2, this.mapPlane.position.set(c + d / 2, 0.01, u + a / 2), this.scene.add(this.mapPlane);
     };
     if (typeof t == "string")
-      new c.TextureLoader().load(t, s);
+      new r.TextureLoader().load(t, i);
     else {
-      const i = t instanceof HTMLCanvasElement ? new c.CanvasTexture(t) : new c.Texture(t);
-      i.needsUpdate = !0, s(i);
+      const s = t instanceof HTMLCanvasElement ? new r.CanvasTexture(t) : new r.Texture(t);
+      s.needsUpdate = !0, i(s);
     }
   }
   // ───────────────────────────────────────────────────────
@@ -1101,12 +1082,12 @@ class Pt {
   }
   /** 월드 좌표로 벽 점 직접 추가 */
   addWallPointWorld(t, e) {
-    var a;
+    var n;
     if (!this.wallDrawing || this.wallPointsCount() >= 512) return;
-    const s = new c.Mesh(this.markerGeo, this.markerMat);
-    s.position.set(t, 0.05, e), this.wallMarkers.add(s);
-    const i = this.wallPointsCount() + 1;
-    this.previewPositions[(i - 1) * 3] = t, this.previewPositions[(i - 1) * 3 + 1] = 0.05, this.previewPositions[(i - 1) * 3 + 2] = e, this.previewGeo.setDrawRange(0, i), this.previewGeo.getAttribute("position").needsUpdate = !0, this.pendingPoints.push({ x: t, z: e }), (a = this.onWallPointAddedCb) == null || a.call(this, { x: t, z: e });
+    const i = new r.Mesh(this.markerGeo, this.markerMat);
+    i.position.set(t, 0.05, e), this.wallMarkers.add(i);
+    const s = this.wallPointsCount() + 1;
+    this.previewPositions[(s - 1) * 3] = t, this.previewPositions[(s - 1) * 3 + 1] = 0.05, this.previewPositions[(s - 1) * 3 + 2] = e, this.previewGeo.setDrawRange(0, s), this.previewGeo.getAttribute("position").needsUpdate = !0, this.pendingPoints.push({ x: t, z: e }), (n = this.onWallPointAddedCb) == null || n.call(this, { x: t, z: e });
   }
   wallPointsCount() {
     return this.pendingPoints.length;
@@ -1119,14 +1100,14 @@ class Pt {
   }
   /** 현재 그린 폴리라인 루프를 닫아 3D 월 생성 */
   closeWallLoop(t) {
-    var i;
+    var s;
     if (this.pendingPoints.length < 3)
       throw new Error("벽 생성을 위해서는 최소 3개 이상의 점이 필요합니다.");
     const e = this.wallBuilder.buildWall(
       this.pendingPoints,
       t ?? { heightM: 3, thicknessM: 0.15 }
-    ), s = this.wallBuilder.getWall(e);
-    return this.clearWallPoints(), (i = this.onWallCreatedCb) == null || i.call(this, e, s), e;
+    ), i = this.wallBuilder.getWall(e);
+    return this.clearWallPoints(), (s = this.onWallCreatedCb) == null || s.call(this, e, i), e;
   }
   /** 클릭으로 선택된 벽 삭제 */
   removeSelectedWall() {
@@ -1136,6 +1117,20 @@ class Pt {
   /** 생성된 모든 3D 월 삭제 */
   clearWalls() {
     this.wallBuilder.clearAll();
+  }
+  // ───────────────────────────────────────────────────────
+  // 벽 뷰 의존적 페이드 (카메라에 가려지는 앞벽 자동 반투명)
+  // ───────────────────────────────────────────────────────
+  /** 앞벽 자동 반투명 페이드 켜기/끄기 (끄면 모든 벽이 불투명으로 복원) */
+  setWallFadeEnabled(t) {
+    this.wallBuilder.setFadeEnabled(t);
+  }
+  isWallFadeEnabled() {
+    return this.wallBuilder.isFadeEnabled();
+  }
+  /** 페이드 세부 옵션 조정 (minOpacity / fadeStart / fadeEnd / fadeSpeed) */
+  setWallFadeOptions(t) {
+    this.wallBuilder.setFadeOptions(t);
   }
   getWallCount() {
     return this.wallBuilder.getWallCount();
@@ -1165,10 +1160,10 @@ class Pt {
   }
   /** REST API에서 맵 그래프 조회 후 로드 (예: ${API_BASE}/api/maps/{mapId}) */
   async loadMapGraphFromUrl(t, e) {
-    const s = await fetch(t);
-    if (!s.ok) throw new Error(`맵 그래프 조회 실패: ${s.status}`);
-    const i = await s.json();
-    this.loadMapGraph(i, e);
+    const i = await fetch(t);
+    if (!i.ok) throw new Error(`맵 그래프 조회 실패: ${i.status}`);
+    const s = await i.json();
+    this.loadMapGraph(s, e);
   }
   clearMapGraph() {
     this.mapGraph.clear();
@@ -1197,8 +1192,8 @@ class Pt {
   // 카메라 프리셋
   // ───────────────────────────────────────────────────────
   /** 정상단(top-down) 뷰 — 외곽선 그리기/맵 확인에 유용 (중심·높이 지정 가능) */
-  setTopView(t = 0, e = 0, s = 60) {
-    this.camera.position.set(t, s, e + 1e-3), this.controls.target.set(t, 0, e), this.camera.lookAt(t, 0, e), this.controls.update();
+  setTopView(t = 0, e = 0, i = 60) {
+    this.camera.position.set(t, i, e + 1e-3), this.controls.target.set(t, 0, e), this.camera.lookAt(t, 0, e), this.controls.update();
   }
   // ───────────────────────────────────────────────────────
   // 이벤트 / 기타
@@ -1234,7 +1229,7 @@ class Pt {
     return this.camera;
   }
 }
-class Et {
+class yt {
   constructor() {
     this.scaleX = 1, this.scaleY = 1, this.originX = 0, this.originY = 0;
   }
@@ -1243,65 +1238,65 @@ class Et {
   }
   /** 픽셀 하나 → 월드 (x, z) */
   toWorld(t, e) {
-    const s = this.cal.imageWidthPx / 2, i = this.cal.imageHeightPx / 2, a = (t - s) * this.scaleX + this.originX, l = -(e - i) * this.scaleY + this.originY;
-    return { x: a, z: l };
+    const i = this.cal.imageWidthPx / 2, s = this.cal.imageHeightPx / 2, n = (t - i) * this.scaleX + this.originX, l = -(e - s) * this.scaleY + this.originY;
+    return { x: n, z: l };
   }
   /** 점 배열 → 월드 (x, z) 배열 */
   toWorldPoints(t) {
     return t.map((e) => this.toWorld(e.x, e.y));
   }
 }
-const B = (o) => o === 32 || o === 9 || o === 10 || o === 13;
-function _t(o) {
+const F = (o) => o === 32 || o === 9 || o === 10 || o === 13;
+function mt(o) {
   const t = new Uint8Array(o);
   let e = 0;
-  const s = () => {
+  const i = () => {
     for (; ; ) {
-      for (; e < t.length && B(t[e]); ) e++;
+      for (; e < t.length && F(t[e]); ) e++;
       if (e < t.length && t[e] === 35) {
         for (; e < t.length && t[e] !== 10; ) e++;
         continue;
       }
       break;
     }
-    let n = "";
-    for (; e < t.length && !B(t[e]); )
-      n += String.fromCharCode(t[e++]);
-    return n;
-  }, i = s();
-  if (i !== "P5" && i !== "P2")
+    let c = "";
+    for (; e < t.length && !F(t[e]); )
+      c += String.fromCharCode(t[e++]);
+    return c;
+  }, s = i();
+  if (s !== "P5" && s !== "P2")
     throw new Error(
-      `지원하지 않는 PGM 형식입니다: ${i} (P5 바이너리 / P2 ASCII만 지원)`
+      `지원하지 않는 PGM 형식입니다: ${s} (P5 바이너리 / P2 ASCII만 지원)`
     );
-  const a = parseInt(s(), 10), l = parseInt(s(), 10), h = parseInt(s(), 10);
-  if (!a || !l || !Number.isFinite(h) || h <= 0)
+  const n = parseInt(i(), 10), l = parseInt(i(), 10), h = parseInt(i(), 10);
+  if (!n || !l || !Number.isFinite(h) || h <= 0)
     throw new Error("PGM 헤더가 올바르지 않습니다.");
-  const d = a * l, r = new Uint8Array(d);
-  if (i === "P5")
+  const d = n * l, a = new Uint8Array(d);
+  if (s === "P5")
     if (e++, h < 256)
-      for (let n = 0; n < d; n++)
-        r[n] = Math.round(t[e + n] * 255 / h);
+      for (let c = 0; c < d; c++)
+        a[c] = Math.round(t[e + c] * 255 / h);
     else
-      for (let n = 0; n < d; n++) {
-        const u = t[e + n * 2] << 8 | t[e + n * 2 + 1];
-        r[n] = Math.round(u * 255 / h);
+      for (let c = 0; c < d; c++) {
+        const u = t[e + c * 2] << 8 | t[e + c * 2 + 1];
+        a[c] = Math.round(u * 255 / h);
       }
   else
-    for (let n = 0; n < d; n++) {
-      const u = parseInt(s(), 10);
-      r[n] = Math.round((Number.isNaN(u) ? 0 : u) * 255 / h);
+    for (let c = 0; c < d; c++) {
+      const u = parseInt(i(), 10);
+      a[c] = Math.round((Number.isNaN(u) ? 0 : u) * 255 / h);
     }
-  return { width: a, height: l, gray: r };
+  return { width: n, height: l, gray: a };
 }
-function bt(o) {
+function gt(o) {
   const t = {};
   for (const e of o.split(/\r?\n/)) {
-    const s = (e.split("#")[0] ?? "").trim();
-    if (!s || s.startsWith("%")) continue;
-    const i = s.indexOf(":");
-    if (i < 0) continue;
-    const a = s.slice(0, i).trim(), l = s.slice(i + 1).trim();
-    switch (a) {
+    const i = (e.split("#")[0] ?? "").trim();
+    if (!i || i.startsWith("%")) continue;
+    const s = i.indexOf(":");
+    if (s < 0) continue;
+    const n = i.slice(0, s).trim(), l = i.slice(s + 1).trim();
+    switch (n) {
       case "image":
         t.image = l.replace(/["']/g, "");
         break;
@@ -1332,40 +1327,40 @@ function bt(o) {
   }
   return t;
 }
-function wt(o, t = {}) {
-  const { width: e, height: s, gray: i } = o, a = t.negate ?? !1, l = t.occupiedThresh ?? 0.65, h = t.freeThresh ?? 0.196, d = document.createElement("canvas");
-  d.width = e, d.height = s;
-  const r = d.getContext("2d"), n = r.createImageData(e, s), u = n.data;
-  for (let p = 0; p < e * s; p++) {
-    const f = i[p], m = (a ? f : 255 - f) / 255;
-    let _, y, M;
-    m > l ? (_ = 30, y = 41, M = 59) : m < h ? (_ = 226, y = 232, M = 240) : (_ = 11, y = 17, M = 32), u[p * 4] = _, u[p * 4 + 1] = y, u[p * 4 + 2] = M, u[p * 4 + 3] = 255;
+function ft(o, t = {}) {
+  const { width: e, height: i, gray: s } = o, n = t.negate ?? !1, l = t.occupiedThresh ?? 0.65, h = t.freeThresh ?? 0.196, d = document.createElement("canvas");
+  d.width = e, d.height = i;
+  const a = d.getContext("2d"), c = a.createImageData(e, i), u = c.data;
+  for (let p = 0; p < e * i; p++) {
+    const f = s[p], g = (n ? f : 255 - f) / 255;
+    let _, b, y;
+    g > l ? (_ = 30, b = 41, y = 59) : g < h ? (_ = 226, b = 232, y = 240) : (_ = 11, b = 17, y = 32), u[p * 4] = _, u[p * 4 + 1] = b, u[p * 4 + 2] = y, u[p * 4 + 3] = 255;
   }
-  return r.putImageData(n, 0, 0), d;
+  return a.putImageData(c, 0, 0), d;
 }
-function yt(o) {
+function _t(o) {
   var d;
   const t = o, e = (d = t.floorList) == null ? void 0 : d[0];
   if (!e)
     throw new Error(
       "floorList가 없는 맵 JSON입니다. (Axbis 비즈니스 맵 규격 확인)"
     );
-  const s = (e.nodeList ?? []).map((r) => ({
-    nodeId: String(r.nodeLabel ?? r.nodeUuid ?? r.nodeNumber ?? ""),
+  const i = (e.nodeList ?? []).map((a) => ({
+    nodeId: String(a.nodeLabel ?? a.nodeUuid ?? a.nodeNumber ?? ""),
     nodePosition: {
-      x: Number(r.xCoordinate ?? 0),
-      y: Number(r.yCoordinate ?? 0)
+      x: Number(a.xCoordinate ?? 0),
+      y: Number(a.yCoordinate ?? 0)
     },
-    kind: r.nodeType === 2 ? "parking" : "normal"
-  })), i = new Set(s.map((r) => r.nodeId)), a = (e.edgeList ?? []).map((r) => ({
-    edgeId: r.edgeLabel != null ? String(r.edgeLabel) : void 0,
-    startNodeId: String(r.beginNodeLabel ?? ""),
-    endNodeId: String(r.endNodeLabel ?? "")
-  })).filter((r) => i.has(r.startNodeId) && i.has(r.endNodeId)), l = {
+    kind: a.nodeType === 2 ? "parking" : "normal"
+  })), s = new Set(i.map((a) => a.nodeId)), n = (e.edgeList ?? []).map((a) => ({
+    edgeId: a.edgeLabel != null ? String(a.edgeLabel) : void 0,
+    startNodeId: String(a.beginNodeLabel ?? ""),
+    endNodeId: String(a.endNodeLabel ?? "")
+  })).filter((a) => s.has(a.startNodeId) && s.has(a.endNodeId)), l = {
     mapId: t.mapCode ?? e.floorNumber,
     mapName: e.floorName || e.floorNumber,
-    nodes: s,
-    edges: a
+    nodes: i,
+    edges: n
   }, h = {
     name: e.floorName || e.floorNumber || "-",
     lengthM: e.floorLength ?? 0,
@@ -1374,49 +1369,49 @@ function yt(o) {
   };
   return { graph: l, floorInfo: h };
 }
-async function xt(o) {
-  const t = o.find((r) => /\.pgm$/i.test(r.name)), e = o.find((r) => /\.(yaml|yml)$/i.test(r.name));
-  let s;
-  for (const r of o)
-    if (/\.json$/i.test(r.name))
+async function Mt(o) {
+  const t = o.find((a) => /\.pgm$/i.test(a.name)), e = o.find((a) => /\.(yaml|yml)$/i.test(a.name));
+  let i;
+  for (const a of o)
+    if (/\.json$/i.test(a.name))
       try {
-        const n = JSON.parse(await r.text());
-        if (n && Array.isArray(n.floorList)) {
-          s = r;
+        const c = JSON.parse(await a.text());
+        if (c && Array.isArray(c.floorList)) {
+          i = a;
           break;
         }
       } catch {
       }
   if (!t)
     throw new Error("PGM 지도 파일(.pgm)을 찾을 수 없습니다.");
-  const i = _t(await t.arrayBuffer());
-  let a = { widthPx: i.width, heightPx: i.height };
-  e ? a = {
-    ...bt(await e.text()),
-    widthPx: i.width,
-    heightPx: i.height
-  } : a.resolutionMPerPx = 0.05;
-  const l = wt(i, a);
+  const s = mt(await t.arrayBuffer());
+  let n = { widthPx: s.width, heightPx: s.height };
+  e ? n = {
+    ...gt(await e.text()),
+    widthPx: s.width,
+    heightPx: s.height
+  } : n.resolutionMPerPx = 0.05;
+  const l = ft(s, n);
   let h = { nodes: [], edges: [] }, d = null;
-  if (s) {
-    const r = yt(
-      JSON.parse(await s.text())
+  if (i) {
+    const a = _t(
+      JSON.parse(await i.text())
     );
-    h = r.graph, d = r.floorInfo;
+    h = a.graph, d = a.floorInfo;
   }
-  return { canvas: l, meta: a, graph: h, floorInfo: d };
+  return { canvas: l, meta: n, graph: h, floorInfo: d };
 }
 export {
-  Pt as AcsViewer,
-  gt as MapGraphRenderer,
-  Et as MapTransform,
-  D as NODE_KIND_COLOR,
-  pt as RobotManager,
-  U as STATUS_COLOR,
-  mt as WallBuilder,
-  yt as convertAxbisBusinessMap,
-  xt as loadAxbisMapFromFiles,
-  bt as parseMapYaml,
-  _t as parsePGM,
-  wt as pgmToCanvas
+  bt as AcsViewer,
+  pt as MapGraphRenderer,
+  yt as MapTransform,
+  I as NODE_KIND_COLOR,
+  dt as RobotManager,
+  W as STATUS_COLOR,
+  ct as WallBuilder,
+  _t as convertAxbisBusinessMap,
+  Mt as loadAxbisMapFromFiles,
+  gt as parseMapYaml,
+  mt as parsePGM,
+  ft as pgmToCanvas
 };

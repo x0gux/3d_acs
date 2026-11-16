@@ -18,6 +18,7 @@ export type {
   WallPoint,
   WorldPoint,
   WallOptions,
+  WallFadeOptions,
   RobotPose,
   MapGraphNode,
   MapGraphEdge,

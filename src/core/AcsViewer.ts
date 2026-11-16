@@ -5,6 +5,7 @@ import type {
   MapCalibration,
   MapMeta,
   WallOptions,
+  WallFadeOptions,
   RobotPose,
   WorldPoint,
   MapGraphData,
@@ -46,7 +47,7 @@ export class AcsViewer {
   private previewGeo = new THREE.BufferGeometry();
   private previewLine: THREE.Line;
 
-  private onWallCreatedCb?: (wallId: string, mesh: THREE.Mesh) => void;
+  private onWallCreatedCb?: (wallId: string, mesh: THREE.Object3D) => void;
   private onWallPointAddedCb?: (point: WorldPoint) => void;
   private onWallSelectedCb?: (wallId: string | null) => void;
   private onRobotClickCb?: (robotId: string) => void;
@@ -107,6 +108,8 @@ export class AcsViewer {
     const dt = this.clock.getDelta();
     this.robotManager.update(dt); // 로봇 위치 보간
     this.controls.update();
+    // 카메라에 가려지는 앞쪽 벽 자동 반투명(뷰 의존적 페이드)
+    this.wallBuilder.updateViewDependentOpacity(this.camera, dt);
     this.renderer.render(this.scene, this.camera);
   };
 
@@ -172,7 +175,7 @@ export class AcsViewer {
     this.scene.add(this.previewLine);
 
     // 매니저
-    this.wallBuilder = new WallBuilder(this.scene);
+    this.wallBuilder = new WallBuilder(this.scene, options.wallFade);
     this.robotManager = new RobotManager(this.scene);
     this.mapGraph = new MapGraphRenderer(this.scene);
 
@@ -385,6 +388,24 @@ export class AcsViewer {
     this.wallBuilder.clearAll();
   }
 
+  // ───────────────────────────────────────────────────────
+  // 벽 뷰 의존적 페이드 (카메라에 가려지는 앞벽 자동 반투명)
+  // ───────────────────────────────────────────────────────
+
+  /** 앞벽 자동 반투명 페이드 켜기/끄기 (끄면 모든 벽이 불투명으로 복원) */
+  setWallFadeEnabled(enabled: boolean) {
+    this.wallBuilder.setFadeEnabled(enabled);
+  }
+
+  isWallFadeEnabled(): boolean {
+    return this.wallBuilder.isFadeEnabled();
+  }
+
+  /** 페이드 세부 옵션 조정 (minOpacity / fadeStart / fadeEnd / fadeSpeed) */
+  setWallFadeOptions(opts: Partial<WallFadeOptions>) {
+    this.wallBuilder.setFadeOptions(opts);
+  }
+
   getWallCount(): number {
     return this.wallBuilder.getWallCount();
   }
@@ -473,7 +494,7 @@ export class AcsViewer {
   // 이벤트 / 기타
   // ───────────────────────────────────────────────────────
 
-  onWallCreated(cb: (wallId: string, mesh: THREE.Mesh) => void) {
+  onWallCreated(cb: (wallId: string, mesh: THREE.Object3D) => void) {
     this.onWallCreatedCb = cb;
   }
 

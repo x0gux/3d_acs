@@ -270,12 +270,20 @@ const btnClearWalls = btn("모든 벽 삭제", () => {
   updateHud();
 });
 
+// 카메라에 가려지는 앞벽 자동 반투명(뷰 의존적 페이드) 토글
+const btnFade = btn(`앞벽 자동 페이드: ${viewer.isWallFadeEnabled() ? "ON" : "OFF"}`, () => {
+  const next = !viewer.isWallFadeEnabled();
+  viewer.setWallFadeEnabled(next);
+  btnFade.textContent = `앞벽 자동 페이드: ${next ? "ON" : "OFF"}`;
+});
+
 ui.appendChild(btnStart);
 ui.appendChild(btnClose);
 ui.appendChild(btnClearPoints);
 ui.appendChild(btnStop);
 ui.appendChild(btnDeleteWall);
 ui.appendChild(btnClearWalls);
+ui.appendChild(btnFade);
 
 // ── 로봇 섹션 ──
 ui.appendChild(sectionLabel("로봇"));
