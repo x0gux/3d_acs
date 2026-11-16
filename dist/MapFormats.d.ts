@@ -24,6 +24,24 @@ export declare function parseMapYaml(text: string): MapMeta;
  * - 미확인: 씬 배경색 #0b1120
  */
 export declare function pgmToCanvas(pgm: PgmImage, meta?: MapMeta): HTMLCanvasElement;
+export interface PgmWallBox {
+    x: number;
+    z: number;
+    widthM: number;
+    depthM: number;
+}
+/**
+ * PGM 점유 픽셀을 행(row) 단위로 연속 구간(run)별로 병합해 벽 박스 목록을 만듭니다.
+ * - 좌표는 ROS 규약(meta.origin을 좌하단, 이미지 위쪽 = +Z)으로 변환됩니다.
+ * - 노이즈 정제: 8방향 연결 컴포넌트 라벨링으로 작은 점유 덩어리(스페클)를 제거합니다.
+ *   (대각선 벽도 8-연결이라 하나의 컴포넌트로 유지됨)
+ */
+export declare function extractPgmWallBoxes(pgm: PgmImage, meta: MapMeta, options?: {
+    occupiedThresh?: number;
+    negate?: boolean;
+    /** 노이즈 정제: 이 픽셀 수 미만의 점유 덩어리는 제거 (기본 4, 1 이하 = 비활성) */
+    minComponentPixels?: number;
+}): PgmWallBox[];
 export interface AxbisFloorInfo {
     name: string;
     lengthM: number;
@@ -45,6 +63,8 @@ export interface AxbisMapLoadResult {
     meta: MapMeta;
     graph: MapGraphData;
     floorInfo: AxbisFloorInfo | null;
+    /** 원본 PGM (자동 벽 추출 등 추가 가공용) */
+    pgm: PgmImage;
 }
 /**
  * Axbis 맵 내보내기 폴더의 파일들을 받아 한 번에 로드합니다.

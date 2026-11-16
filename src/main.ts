@@ -1,6 +1,12 @@
 import { AcsViewer } from "./core/AcsViewer";
 import { loadAxbisMapFromFiles } from "./core/MapFormats";
-import type { MapGraphData, MapGraphEdge, MapGraphNode } from "./core";
+import type {
+  MapGraphData,
+  MapGraphEdge,
+  MapGraphNode,
+  MapMeta,
+  PgmImage,
+} from "./core";
 import "./style.css";
 
 /**
@@ -70,9 +76,13 @@ fileInput.addEventListener("change", (e) => {
 let drawing = false;
 let lastRobotClicked = "";
 let lastNodeClicked = "";
+let lastEdgeInfo = "";
 let graphNodeCount = 0;
 let graphEdgeCount = 0;
 let floorInfoText = "";
+let lastPgm: PgmImage | null = null;
+let lastMeta: MapMeta | null = null;
+let autoWallCount = 0;
 
 const hud = document.createElement("div");
 hud.style.cssText =
@@ -86,11 +96,17 @@ function updateHud() {
   hud.innerHTML =
     `<b style="color:#e2e8f0">조작</b> · 좌클릭 드래그: 회전 · 우클릭 드래그: 이동 · 휠: 줌<br>` +
     `생성된 벽: <b style="color:#e2e8f0">${viewer.getWallCount()}</b>개` +
+    (autoWallCount > 0
+      ? ` · 자동 벽: <b style="color:#e2e8f0">${autoWallCount}</b> 세그먼트`
+      : "") +
     (lastRobotClicked
       ? ` · 로봇: <b style="color:#22d3ee">${lastRobotClicked}</b>`
       : "") +
     (lastNodeClicked
       ? ` · 노드: <b style="color:#f59e0b">${lastNodeClicked}</b>`
+      : "") +
+    (lastEdgeInfo
+      ? ` · 엣지: <b style="color:#f59e0b">${lastEdgeInfo}</b>`
       : "") +
     (graphNodeCount > 0
       ? ` · 그래프: <b style="color:#e2e8f0">노드 ${graphNodeCount} · 엣지 ${graphEdgeCount}</b>`
@@ -101,7 +117,8 @@ function updateHud() {
     `<br>` +
     (drawing
       ? `<span style="color:#22d3ee;font-weight:bold">● 벽 그리기 중 — 바닥 클릭 = 점 추가 (현재 ${wallPointCount}개, 최소 3개)</span>`
-      : `· '벽 그리기 시작' 후 바닥을 클릭해 외곽선을 그리세요 · 로봇/노드/벽 클릭 시 선택`);
+      : `· '벽 그리기 시작' 후 바닥을 클릭해 외곽선을 그리세요 · 로봇/노드/엣지/벽 클릭 시 선택`) +
+    `<br><span style="color:#475569">엣지 범례: <span style="color:#64748b">■</span> 일반 · <span style="color:#f59e0b">■</span> 특수(roadType) · ▶ 일방통행 방향</span>`;
 }
 updateHud();
 
@@ -181,19 +198,29 @@ dirInput.addEventListener("change", async () => {
   const files = Array.from(dirInput.files ?? []);
   if (files.length === 0) return;
   try {
-    const { canvas, meta, graph, floorInfo } = await loadAxbisMapFromFiles(files);
+    const { canvas, meta, graph, floorInfo, pgm } =
+      await loadAxbisMapFromFiles(files);
 
     // 1) PGM → 3D 바닥 텍스처 (YAML resolution/origin 자동 적용)
     viewer.loadMapImage(canvas, meta);
 
     // 2) 비즈니스 JSON → 노드/엣지 그래프 (좌표: 미터)
     if (graph.nodes.length > 0) {
-      viewer.loadMapGraph(graph, { unit: "m", showLabels: true });
+      // 프레임 높이 = 이미지 세로 크기(m) — y원점 "상단" 변환에 사용
+      lastFrameHeight =
+        floorInfo?.widthM ??
+        (meta.heightPx ?? 0) * (meta.resolutionMPerPx ?? 0.05);
+      viewer.loadMapGraph(graph, currentGraphOptions());
       graphNodeCount = viewer.getGraphNodeCount();
       graphEdgeCount = viewer.getGraphEdgeCount();
       graphVisible = true;
       graphToggleBtn.textContent = "그래프 숨기기";
     }
+
+    // 3) PGM 점유 픽셀 → 벽 자동 생성 (외곽 벽 + 내부 장애물)
+    lastPgm = pgm;
+    lastMeta = meta;
+    autoWallCount = viewer.buildAutoWalls(pgm, meta, { heightM: 2.5 });
 
     // 3) HUD 층 정보
     floorInfoText = floorInfo
@@ -270,6 +297,21 @@ const btnClearWalls = btn("모든 벽 삭제", () => {
   updateHud();
 });
 
+const btnAutoDelete = btn("자동 벽 삭제", () => {
+  viewer.clearAutoWalls();
+  autoWallCount = 0;
+  updateHud();
+});
+
+const btnAutoRebuild = btn("자동 벽 다시 생성", () => {
+  if (!lastPgm || !lastMeta) {
+    alert("먼저 'Axbis 맵 폴더 로드'로 PGM 지도를 불러오세요.");
+    return;
+  }
+  autoWallCount = viewer.buildAutoWalls(lastPgm, lastMeta, { heightM: 2.5 });
+  updateHud();
+});
+
 // 카메라에 가려지는 앞벽 자동 반투명(뷰 의존적 페이드) 토글
 const btnFade = btn(`앞벽 자동 페이드: ${viewer.isWallFadeEnabled() ? "ON" : "OFF"}`, () => {
   const next = !viewer.isWallFadeEnabled();
@@ -283,6 +325,8 @@ ui.appendChild(btnClearPoints);
 ui.appendChild(btnStop);
 ui.appendChild(btnDeleteWall);
 ui.appendChild(btnClearWalls);
+ui.appendChild(btnAutoDelete);
+ui.appendChild(btnAutoRebuild);
 ui.appendChild(btnFade);
 
 // ── 로봇 섹션 ──
@@ -307,28 +351,34 @@ ui.appendChild(btnRobotStop);
 // ── 맵 그래프 (노드/엣지) 섹션 ──
 ui.appendChild(sectionLabel("맵 그래프 (노드/엣지)"));
 
-// 좌표 단위 선택 + y축 반전 옵션
+// 좌표 단위 선택 + y 원점 옵션 (노드가 맵 기준 상하 반전으로 보이면 "상단" 선택)
 const graphOptsRow = document.createElement("div");
 graphOptsRow.style.cssText = "display:flex;align-items:center;gap:8px;font-size:12px;color:#94a3b8;";
 const unitSelect = document.createElement("select");
 unitSelect.style.cssText =
   "padding:4px 6px;border-radius:4px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;font-size:12px;";
 unitSelect.innerHTML = `<option value="mm">좌표 단위: mm</option><option value="m">좌표 단위: m</option>`;
-const flipZLabel = document.createElement("label");
-flipZLabel.style.cssText = "display:flex;align-items:center;gap:4px;cursor:pointer;";
-const flipZCheck = document.createElement("input");
-flipZCheck.type = "checkbox";
-flipZLabel.appendChild(flipZCheck);
-flipZLabel.appendChild(document.createTextNode("y축 반전"));
+const yOriginSelect = document.createElement("select");
+yOriginSelect.style.cssText = unitSelect.style.cssText;
+yOriginSelect.innerHTML =
+  `<option value="top">y 원점: 상단(이미지)</option>` +
+  `<option value="bottom">y 원점: 하단(ROS)</option>`;
 graphOptsRow.appendChild(unitSelect);
-graphOptsRow.appendChild(flipZLabel);
+graphOptsRow.appendChild(yOriginSelect);
 ui.appendChild(graphOptsRow);
 
+/** 마지막으로 로드한 맵의 프레임 높이(m) — y원점 "상단" 변환에 사용 */
+let lastFrameHeight: number | undefined;
+
 function currentGraphOptions() {
+  const yOrigin = yOriginSelect.value as "top" | "bottom";
   return {
     unit: unitSelect.value as "mm" | "m",
-    flipZ: flipZCheck.checked,
     showLabels: true,
+    yOrigin,
+    ...(yOrigin === "top" && lastFrameHeight != null
+      ? { frameHeight: lastFrameHeight }
+      : {}),
   };
 }
 
@@ -540,6 +590,20 @@ viewer.onRobotClick((robotId) => {
 viewer.onNodeClick((nodeId) => {
   lastNodeClicked = nodeId;
   console.log(`[AcsViewer] 노드 클릭: ${nodeId}`);
+  updateHud();
+});
+
+viewer.onEdgeClick((edge) => {
+  if (edge) {
+    const parts = [edge.edgeId ?? "-", `${edge.startNodeId}→${edge.endNodeId}`];
+    if (edge.maxVelocity != null) parts.push(`최대 ${edge.maxVelocity}m/s`);
+    if (edge.roadType) parts.push(`roadType ${edge.roadType}`);
+    if (edge.edgeLengthM != null) parts.push(`${edge.edgeLengthM}m`);
+    lastEdgeInfo = parts.join(" · ");
+    console.log(`[AcsViewer] 엣지 클릭:`, edge);
+  } else {
+    lastEdgeInfo = "";
+  }
   updateHud();
 });
 

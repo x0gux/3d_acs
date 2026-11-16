@@ -1,4 +1,5 @@
-import { AcsViewerOptions, MapCalibration, MapMeta, WallOptions, WallFadeOptions, RobotPose, WorldPoint, MapGraphData, MapGraphOptions } from './types';
+import { AcsViewerOptions, MapCalibration, MapMeta, WallOptions, WallFadeOptions, RobotPose, WorldPoint, MapGraphData, MapGraphEdge, MapGraphOptions } from './types';
+import { PgmImage } from './MapFormats';
 import * as THREE from "three";
 /**
  * ACS 관제 3D 뷰어 코어 (순수 TypeScript + Three.js)
@@ -33,6 +34,7 @@ export declare class AcsViewer {
     private onWallSelectedCb?;
     private onRobotClickCb?;
     private onNodeClickCb?;
+    private onEdgeClickCb?;
     private downX;
     private downY;
     private handlePointerDown;
@@ -55,6 +57,22 @@ export declare class AcsViewer {
      *             - 없으면: 맵 중심이 원점에 오도록 배치
      */
     loadMapImage(src: string | HTMLImageElement | HTMLCanvasElement, meta?: MapMeta): void;
+    /**
+     * PGM 점유격자에서 벽을 자동 생성합니다 (기존 자동 벽은 교체).
+     * 외곽 벽 + 내부 장애물(랙/기둥)이 PGM과 픽셀 단위로 일치하게 세워지고,
+     * 수동 벽과 동일한 뷰 의존적 페이드(카메라 정면 벽 자동 반투명)가 적용됩니다.
+     * @returns 생성된 벽 세그먼트 수
+     */
+    buildAutoWalls(pgm: PgmImage, meta: MapMeta, options?: {
+        heightM?: number;
+        color?: number;
+        occupiedThresh?: number;
+        /** 노이즈 정제: 이 픽셀 수 미만의 점유 덩어리 제거 (기본 4) */
+        minComponentPixels?: number;
+    }): number;
+    /** PGM 자동 벽 제거 */
+    clearAutoWalls(): void;
+    hasAutoWalls(): boolean;
     startWallDrawing(): void;
     stopWallDrawing(): void;
     isWallDrawing(): boolean;
@@ -104,6 +122,8 @@ export declare class AcsViewer {
     onRobotClick(cb: (robotId: string) => void): void;
     /** 맵 그래프 노드 클릭 */
     onNodeClick(cb: (nodeId: string) => void): void;
+    /** 맵 그래프 엣지 클릭 (속성 포함 MapGraphEdge 전달) */
+    onEdgeClick(cb: (edge: MapGraphEdge) => void): void;
     dispose(): void;
     getThreeScene(): THREE.Scene;
     getThreeRenderer(): THREE.WebGLRenderer;

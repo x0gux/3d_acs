@@ -9,11 +9,13 @@ import type {
   RobotPose,
   WorldPoint,
   MapGraphData,
+  MapGraphEdge,
   MapGraphOptions,
 } from "./types";
 import { WallBuilder } from "./WallBuilder";
 import { RobotManager } from "./RobotManager";
 import { MapGraphRenderer } from "./MapGraphRenderer";
+import { extractPgmWallBoxes, type PgmImage } from "./MapFormats";
 
 /**
  * ACS 관제 3D 뷰어 코어 (순수 TypeScript + Three.js)
@@ -52,6 +54,7 @@ export class AcsViewer {
   private onWallSelectedCb?: (wallId: string | null) => void;
   private onRobotClickCb?: (robotId: string) => void;
   private onNodeClickCb?: (nodeId: string) => void;
+  private onEdgeClickCb?: (edge: MapGraphEdge) => void;
 
   // 클릭 vs 드래그 구분용
   private downX = 0;
@@ -90,6 +93,14 @@ export class AcsViewer {
     const nodeId = this.mapGraph.raycastNode(this.raycaster);
     if (nodeId) {
       this.onNodeClickCb?.(nodeId);
+      return;
+    }
+
+    // 맵 그래프 엣지 피킹 (클릭 시 해당 엣지 하이라이트)
+    const edgeHit = this.mapGraph.raycastEdge(this.raycaster);
+    if (edgeHit) {
+      this.mapGraph.highlightEdges([edgeHit.key]);
+      this.onEdgeClickCb?.(edgeHit.edge);
       return;
     }
 
@@ -143,6 +154,9 @@ export class AcsViewer {
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.05;
     this.controls.target.set(0, 0, 0);
+
+    // 엣지 라인 피킹 임계값 (m)
+    this.raycaster.params.Line = { threshold: 0.35 };
 
     // 관제 배경 프리셋 (바닥 그리드 + 평면 + 조명)
     const grid = new THREE.GridHelper(100, 50, 0x334155, 0x111827);
@@ -305,6 +319,50 @@ export class AcsViewer {
       tex.needsUpdate = true;
       apply(tex);
     }
+  }
+
+  // ───────────────────────────────────────────────────────
+  // PGM 자동 벽 (WallBuilder 세그먼트로 생성 → 뷰 의존적 페이드 동일 적용)
+  // ───────────────────────────────────────────────────────
+
+  /**
+   * PGM 점유격자에서 벽을 자동 생성합니다 (기존 자동 벽은 교체).
+   * 외곽 벽 + 내부 장애물(랙/기둥)이 PGM과 픽셀 단위로 일치하게 세워지고,
+   * 수동 벽과 동일한 뷰 의존적 페이드(카메라 정면 벽 자동 반투명)가 적용됩니다.
+   * @returns 생성된 벽 세그먼트 수
+   */
+  buildAutoWalls(
+    pgm: PgmImage,
+    meta: MapMeta,
+    options?: {
+      heightM?: number;
+      color?: number;
+      occupiedThresh?: number;
+      /** 노이즈 정제: 이 픽셀 수 미만의 점유 덩어리 제거 (기본 4) */
+      minComponentPixels?: number;
+    }
+  ): number {
+    this.clearAutoWalls();
+
+    const boxes = extractPgmWallBoxes(pgm, meta, {
+      occupiedThresh: options?.occupiedThresh,
+      minComponentPixels: options?.minComponentPixels,
+    });
+    if (boxes.length === 0) return 0;
+
+    return this.wallBuilder.buildAutoWalls(boxes, {
+      heightM: options?.heightM,
+      color: options?.color,
+    });
+  }
+
+  /** PGM 자동 벽 제거 */
+  clearAutoWalls() {
+    this.wallBuilder.clearAutoWalls();
+  }
+
+  hasAutoWalls(): boolean {
+    return this.wallBuilder.hasAutoWalls();
   }
 
   // ───────────────────────────────────────────────────────
@@ -517,6 +575,11 @@ export class AcsViewer {
     this.onNodeClickCb = cb;
   }
 
+  /** 맵 그래프 엣지 클릭 (속성 포함 MapGraphEdge 전달) */
+  onEdgeClick(cb: (edge: MapGraphEdge) => void) {
+    this.onEdgeClickCb = cb;
+  }
+
   dispose() {
     this.renderer.domElement.removeEventListener("pointerdown", this.handlePointerDown);
     this.renderer.domElement.removeEventListener("pointerup", this.handlePointerUp);
@@ -526,6 +589,7 @@ export class AcsViewer {
     this.wallBuilder.clearAll();
     this.robotManager.dispose();
     this.mapGraph.dispose();
+    this.clearAutoWalls();
   }
 
   getThreeScene(): THREE.Scene {

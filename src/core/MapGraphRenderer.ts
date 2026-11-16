@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import type {
   MapGraphData,
+  MapGraphEdge,
   MapGraphNode,
   MapGraphOptions,
 } from "./types";
@@ -16,7 +17,8 @@ export const NODE_KIND_COLOR: Record<string, number> = {
 };
 
 const HIGHLIGHT_COLOR = 0x2563eb;
-const EDGE_COLOR = 0x64748b;
+const EDGE_COLOR = 0x64748b; // 일반 엣지 — 슬레이트
+const EDGE_SPECIAL_COLOR = 0xf59e0b; // roadType 지정 엣지(특수 도로) — 앰버
 
 /** kind 미지정 시 nodeId 패턴으로 추론 (데모룸 규칙: RACK*, T숫자) */
 function inferKind(node: MapGraphNode): string {
@@ -58,11 +60,21 @@ function makeTextSprite(text: string, color: string): THREE.Sprite {
   return sprite;
 }
 
+interface EdgeRecord {
+  key: string;
+  edge: MapGraphEdge;
+  vOff: number; // 라인 정점 오프셋 (첫 정점)
+  base: THREE.Color; // 기본 색 (roadType 반영)
+  arrowIdx: number; // 화살표 인스턴스 인덱스 (-1 = 양방향/화살표 없음)
+}
+
 /**
  * 맵 그래프(노드/엣지) 3D 렌더러
  * - 노드: InstancedMesh(실린더 마커) + 종류별 색상 + ID 라벨 스프라이트
- * - 엣지: 단일 LineSegments (vertex color) → 하이라이트 시 색만 갱신 (저렴함)
- * - 노드 클릭 피킹: instanceId → nodeId
+ * - 엣지: 단일 LineSegments (vertex color)
+ *   · roadType 지정 엣지는 앰버, 일반은 슬레이트
+ *   · 일방통행 엣지(역방향 엣지가 없는 경우)는 진행 방향 화살표 콘
+ * - 피킹: 노드(InstancedMesh instanceId), 엣지(Line raycast)
  */
 export class MapGraphRenderer {
   private scene: THREE.Scene;
@@ -73,18 +85,23 @@ export class MapGraphRenderer {
   private nodeKindColors: THREE.Color[] = [];
   private nodePositions = new Map<string, { x: number; z: number }>();
 
-  private lineColors: Float32Array | null = null;
+  private lineSegments: THREE.LineSegments | null = null;
   private lineColorAttr: THREE.BufferAttribute | null = null;
-  private edgeVertex = new Map<string, number>(); // edgeKey → 첫 정점 오프셋
+  private edgeList: EdgeRecord[] = [];
+
+  private arrowMesh: THREE.InstancedMesh | null = null;
+  private arrowsVisible = true;
 
   private highlightedNodes = new Set<string>();
   private highlightedEdges = new Set<string>();
 
-  private options: Required<MapGraphOptions> = {
+  private options: MapGraphOptions = {
     unit: "mm",
     flipZ: false,
+    yOrigin: "bottom",
     showLabels: true,
     nodeSize: 0.4,
+    showArrows: true,
   };
 
   constructor(scene: THREE.Scene) {
@@ -99,7 +116,21 @@ export class MapGraphRenderer {
     if (options) this.options = { ...this.options, ...options };
 
     const scale = this.options.unit === "m" ? 1 : 0.001;
-    const zSign = this.options.flipZ ? -1 : 1;
+
+    /**
+     * 노드 y → 월드 z 변환
+     * - yOrigin "bottom"(기본): z = y (ROS 규약, y 증가 = +Z)
+     * - yOrigin "top": z = frameHeight − y (이미지/화면 상단 기준, 아래로 증가)
+     *   frameHeight 미지정 시 단순 부호 반전(flipZ와 동일)
+     */
+    const yToZ = (y: number): number => {
+      const v = y * scale;
+      if (this.options.yOrigin === "top") {
+        const fh = this.options.frameHeight;
+        return fh != null ? fh * scale - v : -v;
+      }
+      return this.options.flipZ ? -v : v;
+    };
 
     // 1) 노드 수집 (좌표 유효한 것만)
     const valid: Array<{ node: MapGraphNode; x: number; z: number }> = [];
@@ -108,7 +139,7 @@ export class MapGraphRenderer {
       const y = Number(node.nodePosition?.y);
       if (isNaN(x) || isNaN(y)) continue;
       const wx = x * scale;
-      const wz = zSign * y * scale;
+      const wz = yToZ(y);
       valid.push({ node, x: wx, z: wz });
       this.nodePositions.set(node.nodeId, { x: wx, z: wz });
     }
@@ -161,15 +192,39 @@ export class MapGraphRenderer {
     if (edges.length > 0) {
       const positions = new Float32Array(edges.length * 2 * 3);
       const colors = new Float32Array(edges.length * 2 * 3);
-      const def = new THREE.Color(EDGE_COLOR);
+      const recordByKey = new Map<string, EdgeRecord>();
+
+      // 일방통행 판정용: 역방향 엣지 존재 여부
+      const pairSet = new Set(
+        edges.map((e) => `${e.startNodeId}->${e.endNodeId}`)
+      );
+      const oneWay: Array<{
+        key: string;
+        mid: { x: number; z: number };
+        angleY: number;
+      }> = [];
 
       edges.forEach((e, i) => {
         const a = this.nodePositions.get(e.startNodeId)!;
         const b = this.nodePositions.get(e.endNodeId)!;
         positions.set([a.x, 0.05, a.z, b.x, 0.05, b.z], i * 6);
-        colors.set([def.r, def.g, def.b, def.r, def.g, def.b], i * 6);
+
         const key = e.edgeId ?? `${e.startNodeId}-${e.endNodeId}`;
-        this.edgeVertex.set(key, i * 2);
+        const base = new THREE.Color(e.roadType ? EDGE_SPECIAL_COLOR : EDGE_COLOR);
+        colors.set([base.r, base.g, base.b, base.r, base.g, base.b], i * 6);
+
+        const rec: EdgeRecord = { key, edge: e, vOff: i * 2, base, arrowIdx: -1 };
+        this.edgeList.push(rec);
+        recordByKey.set(key, rec);
+
+        // 역방향 엣지가 없으면 일방통행 → 진행 방향 화살표
+        if (!pairSet.has(`${e.endNodeId}->${e.startNodeId}`)) {
+          oneWay.push({
+            key,
+            mid: { x: (a.x + b.x) / 2, z: (a.z + b.z) / 2 },
+            angleY: Math.atan2(b.x - a.x, b.z - a.z),
+          });
+        }
       });
 
       const geo = new THREE.BufferGeometry();
@@ -177,12 +232,42 @@ export class MapGraphRenderer {
       this.lineColorAttr = new THREE.BufferAttribute(colors, 3);
       geo.setAttribute("color", this.lineColorAttr);
 
-      const lineSegments = new THREE.LineSegments(
+      this.lineSegments = new THREE.LineSegments(
         geo,
         new THREE.LineBasicMaterial({ vertexColors: true })
       );
-      lineSegments.frustumCulled = false;
-      this.group.add(lineSegments);
+      this.lineSegments.frustumCulled = false;
+      this.group.add(this.lineSegments);
+
+      // 5) 일방통행 방향 화살표 (InstancedMesh 콘)
+      if (this.options.showArrows && oneWay.length > 0) {
+        const coneGeo = new THREE.ConeGeometry(0.16, 0.45, 12);
+        coneGeo.rotateX(Math.PI / 2); // 콘 팁이 +Z를 향하도록 (바닥 평면)
+        const coneMat = new THREE.MeshBasicMaterial();
+        this.arrowMesh = new THREE.InstancedMesh(coneGeo, coneMat, oneWay.length);
+        this.arrowMesh.frustumCulled = false;
+        this.arrowMesh.name = "AcsGraphEdgeArrows";
+        this.arrowMesh.visible = this.arrowsVisible;
+
+        const dummy = new THREE.Object3D();
+        const color = new THREE.Color();
+        oneWay.forEach((ow, i) => {
+          dummy.position.set(ow.mid.x, 0.12, ow.mid.z);
+          dummy.rotation.set(0, ow.angleY, 0);
+          dummy.scale.setScalar(1);
+          dummy.updateMatrix();
+          this.arrowMesh!.setMatrixAt(i, dummy.matrix);
+
+          const rec = recordByKey.get(ow.key)!;
+          rec.arrowIdx = i;
+          color.copy(rec.base);
+          this.arrowMesh!.setColorAt(i, color);
+        });
+        if (this.arrowMesh.instanceColor) {
+          this.arrowMesh.instanceColor.needsUpdate = true;
+        }
+        this.group.add(this.arrowMesh);
+      }
     }
   }
 
@@ -197,6 +282,18 @@ export class MapGraphRenderer {
     const instanceId = hits[0]?.instanceId;
     if (instanceId === undefined || instanceId >= this.nodeIds.length) return null;
     return this.nodeIds[instanceId] ?? null;
+  }
+
+  /** 레이캐스트 → 클릭된 엣지 (raycaster.params.Line.threshold 필요) */
+  raycastEdge(
+    raycaster: THREE.Raycaster
+  ): { key: string; edge: MapGraphEdge } | null {
+    if (!this.lineSegments) return null;
+    const hits = raycaster.intersectObject(this.lineSegments);
+    const idx = hits[0]?.index; // LineSegments: 세그먼트 쌍 인덱스
+    if (idx === undefined || !this.edgeList[idx]) return null;
+    const rec = this.edgeList[idx];
+    return { key: rec.key, edge: rec.edge };
   }
 
   // ───────────────────────────────────────────────────────
@@ -241,31 +338,24 @@ export class MapGraphRenderer {
   }
 
   private refreshEdgeColors() {
-    if (!this.lineColors || !this.lineColorAttr) return;
-    const def = new THREE.Color(EDGE_COLOR);
+    if (!this.lineColorAttr) return;
     const hi = new THREE.Color(HIGHLIGHT_COLOR);
+    const color = new THREE.Color();
+    const arr = this.lineColorAttr.array as Float32Array;
 
-    for (const [, off] of this.edgeVertex) {
-      const c = this.highlightedEdges.has(
-        this.edgeKeyAt(off)
-      )
-        ? hi
-        : def;
-      for (const vtx of [off, off + 1]) {
-        this.lineColors[vtx * 3] = c.r;
-        this.lineColors[vtx * 3 + 1] = c.g;
-        this.lineColors[vtx * 3 + 2] = c.b;
+    for (const rec of this.edgeList) {
+      color.copy(this.highlightedEdges.has(rec.key) ? hi : rec.base);
+      for (const v of [rec.vOff, rec.vOff + 1]) {
+        arr[v * 3] = color.r;
+        arr[v * 3 + 1] = color.g;
+        arr[v * 3 + 2] = color.b;
+      }
+      if (this.arrowMesh && rec.arrowIdx >= 0) {
+        this.arrowMesh.setColorAt(rec.arrowIdx, color);
       }
     }
     this.lineColorAttr.needsUpdate = true;
-  }
-
-  /** 정점 오프셋 → 엣지 키 역 조회 */
-  private edgeKeyAt(vertexOffset: number): string {
-    for (const [key, off] of this.edgeVertex) {
-      if (off === vertexOffset) return key;
-    }
-    return "";
+    if (this.arrowMesh?.instanceColor) this.arrowMesh.instanceColor.needsUpdate = true;
   }
 
   // ───────────────────────────────────────────────────────
@@ -280,12 +370,18 @@ export class MapGraphRenderer {
     return this.group.visible;
   }
 
+  /** 일방통행 방향 화살표 표시/숨김 */
+  setArrowsVisible(visible: boolean) {
+    this.arrowsVisible = visible;
+    if (this.arrowMesh) this.arrowMesh.visible = visible;
+  }
+
   getNodeCount(): number {
     return this.nodeIds.length;
   }
 
   getEdgeCount(): number {
-    return this.edgeVertex.size;
+    return this.edgeList.length;
   }
 
   clear() {
@@ -297,9 +393,10 @@ export class MapGraphRenderer {
     this.nodeIds = [];
     this.nodeKindColors = [];
     this.nodePositions.clear();
-    this.lineColors = null;
+    this.lineSegments = null;
     this.lineColorAttr = null;
-    this.edgeVertex.clear();
+    this.edgeList = [];
+    this.arrowMesh = null;
     this.highlightedNodes.clear();
     this.highlightedEdges.clear();
   }

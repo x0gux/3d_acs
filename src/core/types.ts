@@ -98,6 +98,10 @@ export interface MapGraphEdge {
   edgeId?: string;
   startNodeId: string;
   endNodeId: string;
+  roadType?: string;      // 특수 도로 타입 (비어있으면 일반)
+  maxVelocity?: number;   // 최대 속도 (m/s)
+  orientation?: string;   // 허용 주행 각도 목록 ("0,180,90,-90")
+  edgeLengthM?: number;   // 엣지 길이 (m)
 }
 
 export interface MapGraphData {
@@ -112,8 +116,22 @@ export interface MapGraphOptions {
   unit?: "mm" | "m";
   /** 노드 y축 부호 반전 (이미지 좌표계: 위=0, 아래로 증가일 때 true) */
   flipZ?: boolean;
+  /**
+   * 노드 y 원점 기준.
+   * - "bottom"(기본): y 증가 = +Z (ROS 북쪽 규약)
+   * - "top": y 증가 = −Z (이미지/화면 상단 기준, 아래로 증가)
+   *   → z = frameHeight − y 로 변환 (frameHeight 미지정 시 단순 부호 반전)
+   */
+  yOrigin?: "bottom" | "top";
+  /**
+   * yOrigin="top"일 때 변환 기준이 되는 프레임 전체 높이.
+   * 단위는 unit과 동일 (Axbis 맵: floorWidth 값). 지정하면 반전+오프셋이 정확히 적용됩니다.
+   */
+  frameHeight?: number;
   /** 노드 ID 라벨 표시 (기본 true) */
   showLabels?: boolean;
   /** 노드 마커 반지름 (m, 기본 0.4) */
   nodeSize?: number;
+  /** 일방통행 엣지 방향 화살표 표시 (기본 true) */
+  showArrows?: boolean;
 }

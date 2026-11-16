@@ -187,6 +187,115 @@ export function pgmToCanvas(
 }
 
 // ─────────────────────────────────────────────────────────
+// PGM 점유 픽셀 → 벽 박스 자동 추출
+// ─────────────────────────────────────────────────────────
+
+export interface PgmWallBox {
+  x: number;      // 박스 중심 X (m, 월드)
+  z: number;      // 박스 중심 Z (m, 월드)
+  widthM: number; // X 방향 길이
+  depthM: number; // Z 방향 두께 (= res)
+}
+
+/**
+ * PGM 점유 픽셀을 행(row) 단위로 연속 구간(run)별로 병합해 벽 박스 목록을 만듭니다.
+ * - 좌표는 ROS 규약(meta.origin을 좌하단, 이미지 위쪽 = +Z)으로 변환됩니다.
+ * - 노이즈 정제: 8방향 연결 컴포넌트 라벨링으로 작은 점유 덩어리(스페클)를 제거합니다.
+ *   (대각선 벽도 8-연결이라 하나의 컴포넌트로 유지됨)
+ */
+export function extractPgmWallBoxes(
+  pgm: PgmImage,
+  meta: MapMeta,
+  options?: {
+    occupiedThresh?: number;
+    negate?: boolean;
+    /** 노이즈 정제: 이 픽셀 수 미만의 점유 덩어리는 제거 (기본 4, 1 이하 = 비활성) */
+    minComponentPixels?: number;
+  }
+): PgmWallBox[] {
+  const { width, height, gray } = pgm;
+  const negate = options?.negate ?? meta.negate ?? false;
+  const occT = options?.occupiedThresh ?? meta.occupiedThresh ?? 0.65;
+  const res = meta.resolutionMPerPx ?? 0.05;
+  const ox = meta.originX ?? 0;
+  const oy = meta.originY ?? 0;
+  const minPixels = options?.minComponentPixels ?? 4;
+
+  const n = width * height;
+
+  // 1) 이진 점유 그리드
+  const occ = new Uint8Array(n);
+  for (let i = 0; i < n; i++) {
+    occ[i] = ((negate ? gray[i] : 255 - gray[i]) / 255) > occT ? 1 : 0;
+  }
+
+  // 2) 노이즈 정제: 8방향 연결 컴포넌트(connected component) 라벨링
+  if (minPixels > 1) {
+    const comp = new Int32Array(n); // 0 = 미방문
+    const sizes: number[] = [0]; // label 0 더미
+    const stack: number[] = [];
+    let label = 0;
+
+    for (let i = 0; i < n; i++) {
+      if (!occ[i] || comp[i] !== 0) continue;
+      label++;
+      let size = 0;
+      stack.push(i);
+      comp[i] = label;
+      while (stack.length > 0) {
+        const p = stack.pop()!;
+        size++;
+        const px = p % width;
+        const py = (p - px) / width;
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            if (dx === 0 && dy === 0) continue;
+            const nx = px + dx;
+            const ny = py + dy;
+            if (nx < 0 || nx >= width || ny < 0 || ny >= height) continue;
+            const q = ny * width + nx;
+            if (occ[q] && comp[q] === 0) {
+              comp[q] = label;
+              stack.push(q);
+            }
+          }
+        }
+      }
+      sizes.push(size);
+    }
+
+    // 작은 컴포넌트(노이즈) 제거
+    for (let i = 0; i < n; i++) {
+      if (occ[i] && sizes[comp[i]] < minPixels) occ[i] = 0;
+    }
+  }
+
+  // 3) 행 단위 run 병합 → 월드 박스
+  const boxes: PgmWallBox[] = [];
+  for (let row = 0; row < height; row++) {
+    const z = oy + (height - 0.5 - row) * res; // 이미지 위쪽 = +Z
+    let runStart = -1;
+
+    for (let col = 0; col <= width; col++) {
+      const occupied = col < width && occ[row * width + col] === 1;
+
+      if (occupied && runStart < 0) {
+        runStart = col;
+      } else if (!occupied && runStart >= 0) {
+        boxes.push({
+          x: ox + ((runStart + col) / 2) * res,
+          z,
+          widthM: (col - runStart) * res,
+          depthM: res,
+        });
+        runStart = -1;
+      }
+    }
+  }
+  return boxes;
+}
+
+// ─────────────────────────────────────────────────────────
 // Axbis 비즈니스 맵 JSON → MapGraphData 변환
 // ─────────────────────────────────────────────────────────
 
@@ -211,6 +320,10 @@ interface AxbisEdgeRaw {
   edgeNumber?: number;
   beginNodeLabel?: string | number;
   endNodeLabel?: string | number;
+  roadType?: string;
+  maxVelocity?: number;
+  orientation?: string;
+  edgeLength?: number;
 }
 
 interface AxbisFloorRaw {
@@ -256,6 +369,10 @@ export function convertAxbisBusinessMap(json: unknown): {
       edgeId: e.edgeLabel != null ? String(e.edgeLabel) : undefined,
       startNodeId: String(e.beginNodeLabel ?? ""),
       endNodeId: String(e.endNodeLabel ?? ""),
+      roadType: e.roadType || undefined,
+      maxVelocity: e.maxVelocity,
+      orientation: e.orientation || undefined,
+      edgeLengthM: e.edgeLength,
     }))
     .filter((e) => nodeIds.has(e.startNodeId) && nodeIds.has(e.endNodeId));
 
@@ -285,6 +402,8 @@ export interface AxbisMapLoadResult {
   meta: MapMeta;
   graph: MapGraphData;
   floorInfo: AxbisFloorInfo | null;
+  /** 원본 PGM (자동 벽 추출 등 추가 가공용) */
+  pgm: PgmImage;
 }
 
 /**
@@ -343,5 +462,5 @@ export async function loadAxbisMapFromFiles(
     floorInfo = converted.floorInfo;
   }
 
-  return { canvas, meta, graph, floorInfo };
+  return { canvas, meta, graph, floorInfo, pgm };
 }

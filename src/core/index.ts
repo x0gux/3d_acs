@@ -7,6 +7,7 @@ export {
   parsePGM,
   parseMapYaml,
   pgmToCanvas,
+  extractPgmWallBoxes,
   convertAxbisBusinessMap,
   loadAxbisMapFromFiles,
 } from "./MapFormats";
@@ -27,6 +28,7 @@ export type {
 } from "./types";
 export type {
   PgmImage,
+  PgmWallBox,
   AxbisFloorInfo,
   AxbisMapLoadResult,
 } from "./MapFormats";

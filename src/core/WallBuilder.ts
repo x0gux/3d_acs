@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import type { WallOptions, WorldPoint, WallFadeOptions } from "./types";
+import type { PgmWallBox } from "./MapFormats";
 
 const DEFAULT_FADE: WallFadeOptions = {
   enabled: true,
@@ -18,6 +19,11 @@ interface WallSegment {
   outward: THREE.Vector3;
   /** 프레임 보간된 현재 opacity */
   opacity: number;
+  /**
+   * true면 벽면 양쪽 모두에서 바라볼 때 페이드 (|dot| 판정).
+   * PGM 자동 벽 같은 스탠드얼론 박스에 사용. 수동 루프 벽은 false(안/밖 구분).
+   */
+  bothSides?: boolean;
 }
 
 interface WallEntry {
@@ -161,7 +167,9 @@ export class WallBuilder {
         this._v.multiplyScalar(1 / len);
 
         // 1=벽 정면 수평 방향, 0=수직(탑뷰), 음수=벽 안쪽에서 바라봄
-        const s = this._v.dot(seg.outward);
+        // bothSides 세그먼트(스탠드얼론 박스)는 양쪽에서 바라볼 때 모두 페이드
+        const raw = this._v.dot(seg.outward);
+        const s = seg.bothSides ? Math.abs(raw) : raw;
         const t = Math.min(Math.max((s - fadeStart) / range, 0), 1);
         const k = t * t * (3 - 2 * t); // smoothstep
         const target = 1 - k * (1 - minOpacity);
@@ -244,6 +252,75 @@ export class WallBuilder {
     return this.selectedId;
   }
 
+  // ───────────────────────────────────────────────────────
+  // PGM 자동 벽 (뷰 의존적 페이드에 동일하게 참여)
+  // ───────────────────────────────────────────────────────
+
+  private autoWallId: string | null = null;
+
+  /**
+   * PGM에서 추출한 벽 박스들로 자동 벽을 생성합니다 (기존 자동 벽은 교체).
+   * 수동 벽과 동일한 WallSegment 구조로 만들어 뷰 의존적 페이드가 동일하게 적용됩니다.
+   * 스탠드얼론 박스는 안/밖 구분이 없으므로 양면 페이드(bothSides)로 동작합니다.
+   * @returns 생성된 세그먼트 수
+   */
+  buildAutoWalls(
+    boxes: PgmWallBox[],
+    opts: { heightM?: number; color?: number } = {}
+  ): number {
+    this.clearAutoWalls();
+    if (boxes.length === 0) return 0;
+
+    const heightM = opts.heightM ?? 2.5;
+    const color = opts.color ?? 0x475569;
+
+    const group = new THREE.Group();
+    const segments: WallSegment[] = [];
+
+    for (const b of boxes) {
+      const geo = new THREE.BoxGeometry(b.widthM, heightM, b.depthM);
+      geo.translate(b.x, heightM / 2, b.z);
+      const material = new THREE.MeshStandardMaterial({
+        color,
+        transparent: true,
+      });
+      const mesh = new THREE.Mesh(geo, material);
+
+      // 얇은 축이 벽면 법선 방향 (가로 런 → z축 법선, 세로 런 → x축 법선)
+      const outward =
+        b.widthM >= b.depthM
+          ? new THREE.Vector3(0, 0, 1)
+          : new THREE.Vector3(1, 0, 0);
+
+      segments.push({
+        mesh,
+        midpoint: new THREE.Vector3(b.x, heightM / 2, b.z),
+        outward,
+        opacity: 1,
+        bothSides: true,
+      });
+      group.add(mesh);
+    }
+
+    this.scene.add(group);
+    const wallId = `auto_wall_${++this.counter}`;
+    group.userData.wallId = wallId;
+    this.walls.set(wallId, { group, segments });
+    this.autoWallId = wallId;
+    return segments.length;
+  }
+
+  /** PGM 자동 벽 제거 */
+  clearAutoWalls(): void {
+    if (!this.autoWallId) return;
+    this.removeWall(this.autoWallId);
+    this.autoWallId = null;
+  }
+
+  hasAutoWalls(): boolean {
+    return this.autoWallId !== null;
+  }
+
   /** 레이캐스트로 가장 가까운 벽 피킹 */
   raycastWalls(
     raycaster: THREE.Raycaster
@@ -299,5 +376,6 @@ export class WallBuilder {
       this.removeWall(id);
     }
     this.selectedId = null;
+    this.autoWallId = null;
   }
 }
