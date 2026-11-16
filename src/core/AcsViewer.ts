@@ -3,12 +3,16 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import type {
   AcsViewerOptions,
   MapCalibration,
+  MapMeta,
   WallOptions,
   RobotPose,
   WorldPoint,
+  MapGraphData,
+  MapGraphOptions,
 } from "./types";
 import { WallBuilder } from "./WallBuilder";
 import { RobotManager } from "./RobotManager";
+import { MapGraphRenderer } from "./MapGraphRenderer";
 
 /**
  * ACS 관제 3D 뷰어 코어 (순수 TypeScript + Three.js)
@@ -26,6 +30,7 @@ export class AcsViewer {
   private controls: OrbitControls;
   private wallBuilder: WallBuilder;
   private robotManager: RobotManager;
+  private mapGraph: MapGraphRenderer;
   private raycaster = new THREE.Raycaster();
   private clock = new THREE.Clock();
 
@@ -45,6 +50,7 @@ export class AcsViewer {
   private onWallPointAddedCb?: (point: WorldPoint) => void;
   private onWallSelectedCb?: (wallId: string | null) => void;
   private onRobotClickCb?: (robotId: string) => void;
+  private onNodeClickCb?: (nodeId: string) => void;
 
   // 클릭 vs 드래그 구분용
   private downX = 0;
@@ -77,6 +83,13 @@ export class AcsViewer {
         this.onRobotClickCb?.(robotId);
         return;
       }
+    }
+
+    // 맵 그래프 노드 피킹
+    const nodeId = this.mapGraph.raycastNode(this.raycaster);
+    if (nodeId) {
+      this.onNodeClickCb?.(nodeId);
+      return;
     }
 
     const wallHit = this.wallBuilder.raycastWalls(this.raycaster);
@@ -161,6 +174,7 @@ export class AcsViewer {
     // 매니저
     this.wallBuilder = new WallBuilder(this.scene);
     this.robotManager = new RobotManager(this.scene);
+    this.mapGraph = new MapGraphRenderer(this.scene);
 
     // 클릭 핸들러
     this.renderer.domElement.addEventListener("pointerdown", this.handlePointerDown);
@@ -210,11 +224,23 @@ export class AcsViewer {
     this.calibration = cal;
   }
 
-  /** 맵 이미지를 3D 바닥에 텍스처로 깔기 */
-  loadMapImage(src: string | HTMLImageElement) {
+  /**
+   * 맵 이미지를 3D 바닥에 텍스처로 깔기
+   * @param src 이미지 URL, HTMLImageElement, 또는 오프스크린 캔버스(PGM 변환 결과)
+   * @param meta resolution/origin 메타데이터 (ROS YAML 규약)
+   *             - resolutionMPerPx가 있으면: 평면 크기 = px × 해상도
+   *             - origin이 있으면: 이미지 좌하단을 해당 월드 좌표에 배치 (이미지 위쪽 = +Z 북쪽)
+   *             - 없으면: 맵 중심이 원점에 오도록 배치
+   */
+  loadMapImage(
+    src: string | HTMLImageElement | HTMLCanvasElement,
+    meta?: MapMeta
+  ) {
     const apply = (tex: THREE.Texture) => {
       tex.colorSpace = THREE.SRGBColorSpace;
+      tex.flipY = false; // 이미지 위쪽 = +Z (ROS 북쪽 규약 통일)
 
+      // 기존 맵 평면 정리
       if (this.mapPlane) {
         this.scene.remove(this.mapPlane);
         this.mapPlane.geometry.dispose();
@@ -223,21 +249,56 @@ export class AcsViewer {
         oldMat.dispose();
       }
 
-      const w = this.calibration?.realWidthM ?? 50;
-      const h = this.calibration?.realHeightM ?? 28;
+      const widthPx = meta?.widthPx ?? this.calibration?.imageWidthPx ?? 1024;
+      const heightPx = meta?.heightPx ?? this.calibration?.imageHeightPx ?? 1024;
+      const res = meta?.resolutionMPerPx ?? this.calibration?.resolutionMPerPx;
+      const w = res != null ? widthPx * res : (this.calibration?.realWidthM ?? 50);
+      const h = res != null ? heightPx * res : (this.calibration?.realHeightM ?? 28);
+
+      // 원점 결정: meta 우선 → 기존 캘리브레이션 → 중앙 정렬
+      let ox: number;
+      let oy: number;
+      if (meta?.originX !== undefined || meta?.originY !== undefined) {
+        ox = meta.originX ?? 0;
+        oy = meta.originY ?? 0;
+      } else if (
+        this.calibration?.originX !== undefined ||
+        this.calibration?.originY !== undefined
+      ) {
+        ox = this.calibration.originX ?? 0;
+        oy = this.calibration.originY ?? 0;
+      } else {
+        ox = -w / 2;
+        oy = -h / 2;
+      }
+
+      this.calibration = {
+        imageWidthPx: widthPx,
+        imageHeightPx: heightPx,
+        realWidthM: w,
+        realHeightM: h,
+        originX: ox,
+        originY: oy,
+        resolutionMPerPx: res ?? undefined,
+      };
+
       const geo = new THREE.PlaneGeometry(w, h);
       const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 1 });
 
       this.mapPlane = new THREE.Mesh(geo, mat);
       this.mapPlane.rotation.x = -Math.PI / 2;
-      this.mapPlane.position.y = 0.01;
+      // 이미지 좌하단을 (ox, oy)에 맞춤 (ROS 원점 규약)
+      this.mapPlane.position.set(ox + w / 2, 0.01, oy + h / 2);
       this.scene.add(this.mapPlane);
     };
 
     if (typeof src === "string") {
       new THREE.TextureLoader().load(src, apply);
     } else {
-      const tex = new THREE.Texture(src);
+      const tex =
+        src instanceof HTMLCanvasElement
+          ? new THREE.CanvasTexture(src)
+          : new THREE.Texture(src);
       tex.needsUpdate = true;
       apply(tex);
     }
@@ -350,14 +411,61 @@ export class AcsViewer {
   }
 
   // ───────────────────────────────────────────────────────
+  // 맵 그래프 (노드/엣지)
+  // ───────────────────────────────────────────────────────
+
+  /** 맵 그래프 로드 (데모룸 /api/maps/{mapId} 규격 JSON과 호환) */
+  loadMapGraph(graph: MapGraphData, options?: MapGraphOptions) {
+    this.mapGraph.load(graph, options);
+  }
+
+  /** REST API에서 맵 그래프 조회 후 로드 (예: ${API_BASE}/api/maps/{mapId}) */
+  async loadMapGraphFromUrl(url: string, options?: MapGraphOptions): Promise<void> {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`맵 그래프 조회 실패: ${res.status}`);
+    const data = (await res.json()) as MapGraphData;
+    this.loadMapGraph(data, options);
+  }
+
+  clearMapGraph() {
+    this.mapGraph.clear();
+  }
+
+  setGraphVisible(visible: boolean) {
+    this.mapGraph.setVisible(visible);
+  }
+
+  /** 경로상 노드 하이라이트 (로봇 계획 경로 표시용) */
+  highlightGraphNodes(nodeIds: string[]) {
+    this.mapGraph.highlightNodes(nodeIds);
+  }
+
+  /** 경로상 엣지 하이라이트. key: edgeId 또는 "startNodeId-endNodeId" */
+  highlightGraphEdges(edgeKeys: string[]) {
+    this.mapGraph.highlightEdges(edgeKeys);
+  }
+
+  clearGraphHighlights() {
+    this.mapGraph.clearHighlights();
+  }
+
+  getGraphNodeCount(): number {
+    return this.mapGraph.getNodeCount();
+  }
+
+  getGraphEdgeCount(): number {
+    return this.mapGraph.getEdgeCount();
+  }
+
+  // ───────────────────────────────────────────────────────
   // 카메라 프리셋
   // ───────────────────────────────────────────────────────
 
-  /** 정상단(top-down) 뷰 — 외곽선 그리기에 유용 */
-  setTopView() {
-    this.camera.position.set(0, 60, 0.001);
-    this.controls.target.set(0, 0, 0);
-    this.camera.lookAt(0, 0, 0);
+  /** 정상단(top-down) 뷰 — 외곽선 그리기/맵 확인에 유용 (중심·높이 지정 가능) */
+  setTopView(centerX = 0, centerZ = 0, height = 60) {
+    this.camera.position.set(centerX, height, centerZ + 0.001);
+    this.controls.target.set(centerX, 0, centerZ);
+    this.camera.lookAt(centerX, 0, centerZ);
     this.controls.update();
   }
 
@@ -383,6 +491,11 @@ export class AcsViewer {
     this.onRobotClickCb = cb;
   }
 
+  /** 맵 그래프 노드 클릭 */
+  onNodeClick(cb: (nodeId: string) => void) {
+    this.onNodeClickCb = cb;
+  }
+
   dispose() {
     this.renderer.domElement.removeEventListener("pointerdown", this.handlePointerDown);
     this.renderer.domElement.removeEventListener("pointerup", this.handlePointerUp);
@@ -391,6 +504,7 @@ export class AcsViewer {
     this.renderer.dispose();
     this.wallBuilder.clearAll();
     this.robotManager.dispose();
+    this.mapGraph.dispose();
   }
 
   getThreeScene(): THREE.Scene {

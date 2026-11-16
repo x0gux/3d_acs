@@ -1,4 +1,6 @@
 import { AcsViewer } from "./core/AcsViewer";
+import { loadAxbisMapFromFiles } from "./core/MapFormats";
+import type { MapGraphData, MapGraphEdge, MapGraphNode } from "./core";
 import "./style.css";
 
 /**
@@ -67,6 +69,10 @@ fileInput.addEventListener("change", (e) => {
 // ─────────────────────────────────────────────────────────
 let drawing = false;
 let lastRobotClicked = "";
+let lastNodeClicked = "";
+let graphNodeCount = 0;
+let graphEdgeCount = 0;
+let floorInfoText = "";
 
 const hud = document.createElement("div");
 hud.style.cssText =
@@ -81,12 +87,21 @@ function updateHud() {
     `<b style="color:#e2e8f0">조작</b> · 좌클릭 드래그: 회전 · 우클릭 드래그: 이동 · 휠: 줌<br>` +
     `생성된 벽: <b style="color:#e2e8f0">${viewer.getWallCount()}</b>개` +
     (lastRobotClicked
-      ? ` · 마지막 클릭 로봇: <b style="color:#22d3ee">${lastRobotClicked}</b>`
+      ? ` · 로봇: <b style="color:#22d3ee">${lastRobotClicked}</b>`
+      : "") +
+    (lastNodeClicked
+      ? ` · 노드: <b style="color:#f59e0b">${lastNodeClicked}</b>`
+      : "") +
+    (graphNodeCount > 0
+      ? ` · 그래프: <b style="color:#e2e8f0">노드 ${graphNodeCount} · 엣지 ${graphEdgeCount}</b>`
+      : "") +
+    (floorInfoText
+      ? `<br><span style="color:#2dd4bf">${floorInfoText}</span>`
       : "") +
     `<br>` +
     (drawing
       ? `<span style="color:#22d3ee;font-weight:bold">● 벽 그리기 중 — 바닥 클릭 = 점 추가 (현재 ${wallPointCount}개, 최소 3개)</span>`
-      : `· '벽 그리기 시작' 후 바닥을 클릭해 외곽선을 그리세요 · 로봇/벽 클릭 시 선택`);
+      : `· '벽 그리기 시작' 후 바닥을 클릭해 외곽선을 그리세요 · 로봇/노드/벽 클릭 시 선택`);
 }
 updateHud();
 
@@ -147,6 +162,59 @@ function numberInput(label: string, value: number, min: number, max: number, ste
 // ── 지도 섹션 ──
 ui.appendChild(sectionLabel("지도"));
 ui.appendChild(btn("지도 이미지 업로드", () => fileInput.click()));
+
+// Axbis 맵 내보내기 폴더 통합 로드 (PGM + YAML + 비즈니스 JSON)
+const dirInput = document.createElement("input");
+dirInput.type = "file";
+dirInput.setAttribute("webkitdirectory", ""); // 폴더 선택
+dirInput.style.display = "none";
+container.appendChild(dirInput);
+
+ui.appendChild(
+  btn("Axbis 맵 폴더 로드 (PGM+YAML+JSON)", async () => {
+    // 클릭 시점에 파일 선택창이 뜨도록 별도 핸들러 없이 click 트리거
+    dirInput.click();
+  })
+);
+
+dirInput.addEventListener("change", async () => {
+  const files = Array.from(dirInput.files ?? []);
+  if (files.length === 0) return;
+  try {
+    const { canvas, meta, graph, floorInfo } = await loadAxbisMapFromFiles(files);
+
+    // 1) PGM → 3D 바닥 텍스처 (YAML resolution/origin 자동 적용)
+    viewer.loadMapImage(canvas, meta);
+
+    // 2) 비즈니스 JSON → 노드/엣지 그래프 (좌표: 미터)
+    if (graph.nodes.length > 0) {
+      viewer.loadMapGraph(graph, { unit: "m", showLabels: true });
+      graphNodeCount = viewer.getGraphNodeCount();
+      graphEdgeCount = viewer.getGraphEdgeCount();
+      graphVisible = true;
+      graphToggleBtn.textContent = "그래프 숨기기";
+    }
+
+    // 3) HUD 층 정보
+    floorInfoText = floorInfo
+      ? `${floorInfo.name} · ${floorInfo.lengthM}×${floorInfo.widthM}m · v${floorInfo.version}` +
+        ` · ${meta.resolutionMPerPx ?? "?"}m/px`
+      : `PGM ${meta.widthPx}×${meta.heightPx}px · ${meta.resolutionMPerPx ?? "?"}m/px`;
+
+    // 4) 맵 중심으로 정상단 뷰 이동 — 노드/엣지 확인에 유용
+    if (floorInfo) {
+      viewer.setTopView(
+        floorInfo.lengthM / 2 + (meta.originX ?? 0),
+        floorInfo.widthM / 2 + (meta.originY ?? 0),
+        Math.max(40, Math.max(floorInfo.lengthM, floorInfo.widthM) * 1.4)
+      );
+    }
+  } catch (err) {
+    alert("Axbis 맵 로드 실패: " + (err as Error).message);
+  }
+  dirInput.value = "";
+  updateHud();
+});
 
 // ── 벽 섹션 ──
 ui.appendChild(sectionLabel("벽"));
@@ -227,6 +295,129 @@ const btnRobotStop = btn("가상 로봇 정지", () => {
 
 ui.appendChild(btnRobotDemo);
 ui.appendChild(btnRobotStop);
+
+// ── 맵 그래프 (노드/엣지) 섹션 ──
+ui.appendChild(sectionLabel("맵 그래프 (노드/엣지)"));
+
+// 좌표 단위 선택 + y축 반전 옵션
+const graphOptsRow = document.createElement("div");
+graphOptsRow.style.cssText = "display:flex;align-items:center;gap:8px;font-size:12px;color:#94a3b8;";
+const unitSelect = document.createElement("select");
+unitSelect.style.cssText =
+  "padding:4px 6px;border-radius:4px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;font-size:12px;";
+unitSelect.innerHTML = `<option value="mm">좌표 단위: mm</option><option value="m">좌표 단위: m</option>`;
+const flipZLabel = document.createElement("label");
+flipZLabel.style.cssText = "display:flex;align-items:center;gap:4px;cursor:pointer;";
+const flipZCheck = document.createElement("input");
+flipZCheck.type = "checkbox";
+flipZLabel.appendChild(flipZCheck);
+flipZLabel.appendChild(document.createTextNode("y축 반전"));
+graphOptsRow.appendChild(unitSelect);
+graphOptsRow.appendChild(flipZLabel);
+ui.appendChild(graphOptsRow);
+
+function currentGraphOptions() {
+  return {
+    unit: unitSelect.value as "mm" | "m",
+    flipZ: flipZCheck.checked,
+    showLabels: true,
+  };
+}
+
+// 샘플 창고 그리드 그래프 생성 (데모룸 맵 JSON 규격과 동일 구조)
+function makeSampleGraph(): MapGraphData {
+  const nodes: MapGraphNode[] = [];
+  const edges: MapGraphEdge[] = [];
+  const cols = 6;
+  const rows = 4;
+  const gap = 6000; // mm
+  const at = (r: number, c: number) => `N-${r}${c}`;
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      nodes.push({
+        nodeId: at(r, c),
+        nodePosition: {
+          x: (c - (cols - 1) / 2) * gap,
+          y: (r - (rows - 1) / 2) * gap,
+        },
+        kind:
+          r === 0 && (c === 0 || c === cols - 1)
+            ? "charge"
+            : c === 0
+              ? "rack"
+              : "normal",
+      });
+    }
+  }
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (c < cols - 1) {
+        edges.push({ edgeId: `${at(r, c)}-${at(r, c + 1)}`, startNodeId: at(r, c), endNodeId: at(r, c + 1) });
+      }
+      if (r < rows - 1) {
+        edges.push({ edgeId: `${at(r, c)}-${at(r + 1, c)}`, startNodeId: at(r, c), endNodeId: at(r + 1, c) });
+      }
+    }
+  }
+  return { mapId: "sample", mapName: "샘플 창고 그리드", nodes, edges };
+}
+
+let graphVisible = true;
+const graphToggleBtn = btn("그래프 숨기기", () => {
+  graphVisible = !graphVisible;
+  viewer.setGraphVisible(graphVisible);
+  graphToggleBtn.textContent = graphVisible ? "그래프 숨기기" : "그래프 보이기";
+});
+
+ui.appendChild(
+  btn("샘플 그래프 로드", () => {
+    const graph = makeSampleGraph();
+    viewer.loadMapGraph(graph, currentGraphOptions());
+    graphNodeCount = viewer.getGraphNodeCount();
+    graphEdgeCount = viewer.getGraphEdgeCount();
+    graphVisible = true;
+    graphToggleBtn.textContent = "그래프 숨기기";
+    updateHud();
+  })
+);
+
+const graphInput = document.createElement("input");
+graphInput.type = "file";
+graphInput.accept = ".json";
+graphInput.style.display = "none";
+container.appendChild(graphInput);
+
+ui.appendChild(
+  btn("그래프 JSON 로드", () => graphInput.click())
+);
+
+graphInput.addEventListener("change", async () => {
+  const file = graphInput.files?.[0];
+  if (!file) return;
+  try {
+    const data = JSON.parse(await file.text()) as MapGraphData;
+    viewer.loadMapGraph(data, currentGraphOptions());
+    graphNodeCount = viewer.getGraphNodeCount();
+    graphEdgeCount = viewer.getGraphEdgeCount();
+    graphVisible = true;
+    graphToggleBtn.textContent = "그래프 숨기기";
+    updateHud();
+  } catch (err) {
+    alert("그래프 로드 실패: " + (err as Error).message);
+  }
+  graphInput.value = "";
+});
+
+ui.appendChild(
+  btn("경로 하이라이트 데모", () => {
+    viewer.highlightGraphNodes(["N-00", "N-01", "N-02", "N-03"]);
+    viewer.highlightGraphEdges(["N-00-N-01", "N-01-N-02", "N-02-N-03"]);
+  })
+);
+
+ui.appendChild(btn("하이라이트 해제", () => viewer.clearGraphHighlights()));
+ui.appendChild(graphToggleBtn);
 
 // ── 카메라 섹션 ──
 ui.appendChild(sectionLabel("카메라"));
@@ -338,4 +529,10 @@ viewer.onRobotClick((robotId) => {
   updateHud();
 });
 
-console.log("[AcsViewer] 벽 + 로봇 데모 시작");
+viewer.onNodeClick((nodeId) => {
+  lastNodeClicked = nodeId;
+  console.log(`[AcsViewer] 노드 클릭: ${nodeId}`);
+  updateHud();
+});
+
+console.log("[AcsViewer] 벽 + 로봇 + 맵 그래프 데모 시작");
