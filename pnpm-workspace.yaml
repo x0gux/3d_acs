@@ -1,0 +1,7 @@
+packages:
+  - "packages/*"
+  - "apps/*"
+
+# esbuild 설치 스크립트 승인 (pnpm v10)
+onlyBuiltDependencies:
+  - esbuild

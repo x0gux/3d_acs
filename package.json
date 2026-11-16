@@ -1,36 +1,15 @@
 {
-  "name": "acs-3d-viewer",
+  "name": "axbis-acs-workspace",
   "private": true,
   "version": "0.1.0",
-  "type": "module",
-  "description": "ACS 관제용 3D 모니터링 코어 라이브러리 (Three.js)",
-  "main": "./dist/acs-core.umd.cjs",
-  "module": "./dist/acs-core.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/acs-core.js",
-      "require": "./dist/acs-core.umd.cjs"
-    }
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
   },
-  "files": [
-    "dist"
-  ],
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "build:lib": "vite build -c vite.lib.config.ts",
-    "preview": "vite preview",
-    "typecheck": "tsc --noEmit"
-  },
-  "dependencies": {
-    "three": "^0.187.0"
-  },
-  "devDependencies": {
-    "@types/three": "^0.187.0",
-    "typescript": "^5.6.0",
-    "vite": "^6.0.0",
-    "vite-plugin-dts": "^5.1.2"
+    "dev": "pnpm --filter @axbis/demo dev",
+    "build": "pnpm --filter @axbis/acs-core build && pnpm --filter @axbis/acs-react build && pnpm --filter @axbis/demo build",
+    "typecheck": "pnpm --filter @axbis/acs-core build && pnpm -r typecheck",
+    "pack:core": "pnpm --filter @axbis/acs-core build && pnpm --filter @axbis/acs-core pack",
+    "pack:react": "pnpm run build && pnpm --filter @axbis/acs-react pack"
   }
 }
