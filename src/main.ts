@@ -361,8 +361,8 @@ unitSelect.innerHTML = `<option value="mm">좌표 단위: mm</option><option val
 const yOriginSelect = document.createElement("select");
 yOriginSelect.style.cssText = unitSelect.style.cssText;
 yOriginSelect.innerHTML =
-  `<option value="top">y 원점: 상단(이미지)</option>` +
-  `<option value="bottom">y 원점: 하단(ROS)</option>`;
+  `<option value="bottom">y 원점: 하단(ROS, 기본)</option>` +
+  `<option value="top">y 원점: 상단(이미지)</option>`;
 graphOptsRow.appendChild(unitSelect);
 graphOptsRow.appendChild(yOriginSelect);
 ui.appendChild(graphOptsRow);
